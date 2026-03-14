@@ -1,0 +1,85 @@
+# Cortex Configuration — Example
+# ─────────────────────────────────────────────────────────────────────────────
+# SETUP: Copy this file to settings.yaml and customize for your machine.
+#   cp settings.example.yaml settings.yaml
+#
+# settings.yaml is gitignored (machine-specific paths, personal vault location).
+# settings.example.yaml is committed (safe defaults, documentation).
+#
+# See docs/02-ARCHITECTURE.md § 6 for full config reference.
+# ─────────────────────────────────────────────────────────────────────────────
+
+vault:
+  # Path to your Obsidian vault (relative or absolute)
+  path: ./vault
+
+  # Folder containing note templates
+  templates_folder: _templates
+
+index:
+  # Path to DuckDB database (full-text + metadata)
+  db_path: ./data/cortex.duckdb
+
+  # Path to LanceDB embeddings
+  embeddings_path: ./data/embeddings
+
+  # Path to NetworkX graph (GraphML format)
+  graph_path: ./data/graph
+
+embeddings:
+  # sentence-transformers model name
+  # nomic-embed-text: 768-dim, trained for retrieval, runs on CPU
+  model: nomic-embed-text
+
+  # Target chunk size in tokens (paragraphs/sentences split to ~this size)
+  chunk_size: 300
+
+  # Maximum chunk size in tokens (hard limit for a single chunk)
+  chunk_max: 500
+
+  # Embedding dimension (nomic-embed-text: 768)
+  dimension: 768
+
+search:
+  # Default number of results to return from search
+  default_limit: 10
+
+  # RRF (Reciprocal Rank Fusion) parameter k
+  # Controls how aggressively the fusion weights recent results
+  fusion_k: 60
+
+lifecycle:
+  # Days without modification before a note is considered stale
+  staleness_thresholds:
+    inbox: 30       # Quick captures
+    task: 30        # Tasks and todos
+    source: 90      # Source material
+    concept: 365    # Conceptual notes
+    permanent: 365  # Permanent notes (rarely stale)
+
+draft:
+  # Path to store draft notes pending approval
+  drafts_dir: ./data/drafts
+
+  # Auto-cleanup: delete drafts older than N hours
+  stale_draft_hours: 24
+
+# Docker-specific overrides (used by docker-entrypoint.sh)
+# These can be set via environment variables:
+#   CORTEX_VAULT_PATH
+#   CORTEX_DATA_PATH
+# Example:
+#   docker compose -e CORTEX_VAULT_PATH=/mnt/vault up
+
+# Logging (optional)
+# logging:
+#   level: INFO
+#   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# MCP Server configuration
+mcp:
+  # Timeout for tool execution (seconds)
+  tool_timeout: 30
+
+  # Maximum context size for Claude (tokens)
+  max_context_tokens: 4000

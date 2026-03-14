@@ -1,0 +1,5 @@
+{
+  "version": "0.1",
+  "description": "Annotated query → expected-results pairs for Cortex retrieval eval. See docs/02-ARCHITECTURE.md § 8a.",
+  "cases": []
+}

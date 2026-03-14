@@ -1,0 +1,82 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Type checking
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# =============================================================================
+# Cortex project-specific
+# =============================================================================
+
+# User configuration (copy settings.example.yaml → settings.yaml and customize)
+settings.yaml
+
+# Derived data — all rebuildable from the vault, never commit
+data/
+
+# The user's actual Obsidian vault (separate from vault.example/)
+vault/
+
+# Downloaded embedding models
+.cache/
+.huggingface/
+models/
+
+# Draft notes pending approval
+data/drafts/
+
+# DuckDB write-ahead log
+*.duckdb-shm
+*.duckdb-wal
+
+# Eval snapshots with real data (committed manually when stable)
+evals/snapshots/*.json
+!evals/snapshots/.gitkeep
+
+# =============================================================================
+# Tooling
+# =============================================================================
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# uv — lock file SHOULD be committed (do not add uv.lock here)
+.uv/
+
+# =============================================================================
+# NOTE: uv.lock is intentionally NOT ignored.
+# Commit it so collaborators get reproducible installs.
+# =============================================================================

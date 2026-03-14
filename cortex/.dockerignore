@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+env/
+venv/
+.env
+*.egg-info/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Data and artifacts (rebuildable)
+data/
+.huggingface/
+.cache/
+
+# Vault (user files, mounted separately)
+vault/
+# But keep the _templates folder
+!vault/_templates/
+
+# Documentation and tests
+docs/
+tests/
+evals/
+*.md
+LICENSE
+CONTRIBUTING.md
+
+# Development
+justfile
+uv.lock
+Makefile
+.pre-commit-config.yaml
