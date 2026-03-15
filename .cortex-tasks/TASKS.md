@@ -218,7 +218,7 @@
 ## Session 4: Lexical Index (DuckDB)
 
 ### Task 4.1 — LexicalIndex Core
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/lexical.py`
 **Depends on:** Task 2.1
 

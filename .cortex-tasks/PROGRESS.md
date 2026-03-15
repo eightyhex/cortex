@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 3.4 — DraftManager.approve_draft Integration
-**Next task:** Task 4.1 — LexicalIndex Core
-**Session:** 6 of 14
+**Last completed task:** Task 4.1 — LexicalIndex Core
+**Next task:** Task 4.2 — IndexManager Skeleton
+**Session:** 7 of 14
 
 ## Completed Tasks
 
@@ -23,6 +23,7 @@
 - Task 3.2 — VaultManager Write Operations ✅
 - Task 3.3 — Capture Commands ✅
 - Task 3.4 — DraftManager.approve_draft Integration ✅
+- Task 4.1 — LexicalIndex Core ✅
 
 ## Notes & Decisions
 
@@ -132,6 +133,18 @@
 - Calls `vault.create_note(draft)` to write the .md file, then deletes the draft JSON
 - Files: `src/cortex/capture/draft.py`, `tests/test_capture/test_approve.py`
 - Tests: 4 new tests, 108 total — all pass (approve creates file, approve deletes draft, approve returns valid Note, nonexistent draft raises)
+
+### 2026-03-15 — Task 4.1 ✅
+- Implemented `LexicalIndex` class in `src/cortex/index/lexical.py` with DuckDB-backed full-text search
+- `__init__(db_path)` — creates/opens DuckDB database, creates `notes` table if not exists
+- `index_note(note)` — upserts note (DELETE + INSERT) and rebuilds FTS index
+- `remove_note(note_id)` — deletes note from table
+- `rebuild(notes)` — drops and recreates table + FTS index, inserts all notes
+- `search(query, limit, filters)` — BM25 full-text search with optional filters (note_type, tags, status, date_range)
+- `SearchResult` dataclass with: note_id, title, score, snippet, note_type, path
+- Tags stored as both `VARCHAR[]` (filtering) and `tags_text VARCHAR` (FTS)
+- Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
+- Tests: 17 new tests, 125 total — all pass (index, upsert, remove, rebuild, search by keyword, filters, BM25 ranking, limit, snippets, empty results)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
