@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 7.1 — MCP Server Setup & Capture Tools
-**Next task:** Task 7.2 — MCP Search & Admin Tools
-**Session:** 15 of 14
+**Last completed task:** Task 7.2 — MCP Search & Admin Tools
+**Next task:** Task 8.1 — GraphManager & Graph Builder
+**Session:** 16 of 14
 
 ## Completed Tasks
 
@@ -33,6 +33,7 @@
 - Task 6.2 — Context Assembler ✅
 - Task 6.3 — QueryPipeline ✅
 - Task 7.1 — MCP Server Setup & Capture Tools ✅
+- Task 7.2 — MCP Search & Admin Tools ✅
 
 ## Notes & Decisions
 
@@ -239,6 +240,17 @@
 - Entry point `src/cortex/main.py` — `uv run python -m cortex.main` starts the server via stdio transport
 - Files: `src/cortex/mcp/server.py`, `src/cortex/main.py`, `tests/test_mcp/__init__.py`, `tests/test_mcp/test_server.py`
 - Tests: 18 new tests, 191 total — all pass
+
+### 2026-03-15 — Task 7.2 ✅
+- Added 4 new MCP tools: `search_vault`, `get_note`, `rebuild_index`, `vault_stats`
+- `search_vault` runs QueryPipeline (lexical+semantic), returns structured context with optional note_type filter
+- `get_note` returns full note content/metadata by ID
+- `rebuild_index` triggers full index rebuild from vault, tracks last rebuild timestamp
+- `vault_stats` returns note counts by type, index sizes (lexical notes, semantic chunks), last rebuild time
+- Extended `init_server` to accept optional `IndexManager` for search/admin tools
+- Error handling: clear messages for missing index, vault not found, note not found
+- Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
+- Tests: 20 new tests, 211 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

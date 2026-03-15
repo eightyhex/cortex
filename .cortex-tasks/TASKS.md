@@ -397,7 +397,7 @@
 ---
 
 ### Task 7.2 — MCP Search & Admin Tools
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/mcp/server.py` (extend)
 **Depends on:** Task 7.1, 6.3
 
