@@ -108,7 +108,7 @@
 ---
 
 ### Task 2.2 — Link & Tag Extractor
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/parser.py` (extend)
 **Depends on:** Task 2.1
 
