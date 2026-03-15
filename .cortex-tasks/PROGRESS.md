@@ -4,14 +4,14 @@
 
 ## Current State
 
-**Last updated:** (not yet started)
-**Last completed task:** none
-**Next task:** Task 1.1 — Pydantic Config Module
+**Last updated:** 2026-03-15
+**Last completed task:** Task 1.1 — Pydantic Config Module
+**Next task:** Task 1.2 — Vault Directory Scaffolding
 **Session:** 1 of 14
 
 ## Completed Tasks
 
-(none yet)
+- Task 1.1 — Pydantic Config Module ✅
 
 ## Notes & Decisions
 
@@ -23,6 +23,13 @@
 ## Log
 
 (Each agent appends an entry here when it completes a task)
+
+### 2026-03-15 — Task 1.1 ✅
+- Implemented CortexConfig with nested Pydantic models for vault, index, embeddings, search, lifecycle, draft, and mcp sections
+- YAML loading with settings.yaml → settings.example.yaml fallback via custom pydantic-settings source
+- Environment variable overrides work with CORTEX_ prefix and __ nested delimiter
+- Files: `src/cortex/config.py`, `tests/test_config.py`
+- Tests: 6 tests, all pass (default loading, YAML loading, example fallback, env override, missing file defaults, Path type check)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

@@ -7,7 +7,7 @@
 ## Session 1: Project Scaffolding, Vault Structure & Docker Setup
 
 ### Task 1.1 — Pydantic Config Module
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/config.py`
 **Depends on:** nothing (first task)
 
