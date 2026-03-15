@@ -59,7 +59,7 @@ class QueryPipeline:
         from cortex.query.reranker import HeuristicReranker
 
         self._reranker = HeuristicReranker(
-            reranker_config or RerankerConfig(), lexical
+            reranker_config or RerankerConfig(), lexical, semantic=semantic
         )
 
     async def execute(self, query: str, limit: int = 10) -> QueryResult:

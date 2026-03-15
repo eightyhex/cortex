@@ -13,6 +13,7 @@ from cortex.query.pipeline import RankedResult
 if TYPE_CHECKING:
     from cortex.graph.manager import GraphManager
     from cortex.index.lexical import LexicalIndex
+    from cortex.index.semantic import SemanticIndex
 
 # Note type priority: higher value = more authoritative
 TYPE_PRIORITY: dict[str, float] = {
@@ -38,9 +39,15 @@ STATUS_BOOST: dict[str, float] = {
 class HeuristicReranker:
     """Reranks search results using heuristic signals: recency, type, links, status."""
 
-    def __init__(self, config: RerankerConfig, lexical: LexicalIndex) -> None:
+    def __init__(
+        self,
+        config: RerankerConfig,
+        lexical: LexicalIndex,
+        semantic: SemanticIndex | None = None,
+    ) -> None:
         self._config = config
         self._lexical = lexical
+        self._semantic = semantic
 
     def rerank(
         self,
@@ -132,10 +139,16 @@ class HeuristicReranker:
         return reranked
 
     def _fetch_metadata(self, note_ids: list[str]) -> dict[str, dict]:
-        """Fetch note metadata (created, note_type, status) from lexical index."""
+        """Fetch note metadata (created, note_type, status) from lexical index.
+
+        Falls back to semantic index for notes not found in lexical index.
+        """
         if not note_ids:
             return {}
 
+        result: dict[str, dict] = {}
+
+        # Step 1: Try lexical index
         try:
             placeholders = ", ".join("?" for _ in note_ids)
             rows = self._lexical._conn.execute(
@@ -143,7 +156,6 @@ class HeuristicReranker:
                 note_ids,
             ).fetchall()
 
-            result: dict[str, dict] = {}
             for note_id, created, note_type, status in rows:
                 meta: dict = {"note_type": note_type or "", "status": status or "active"}
                 if created is not None:
@@ -160,9 +172,42 @@ class HeuristicReranker:
                         except (ValueError, TypeError):
                             pass
                 result[note_id] = meta
-            return result
         except Exception:
-            return {}
+            pass
+
+        # Step 2: Fall back to semantic index for missing notes
+        missing = [nid for nid in note_ids if nid not in result]
+        if missing and self._semantic is not None:
+            result.update(self._fetch_semantic_metadata(missing))
+
+        return result
+
+    def _fetch_semantic_metadata(self, note_ids: list[str]) -> dict[str, dict]:
+        """Fetch metadata from the semantic index for notes not in the lexical index."""
+        result: dict[str, dict] = {}
+        try:
+            table = self._semantic._get_table()
+            for note_id in note_ids:
+                rows = table.search().where(f"note_id = '{note_id}'").limit(1).to_list()
+                if not rows:
+                    continue
+                row = rows[0]
+                meta: dict = {
+                    "note_type": row.get("note_type", ""),
+                    "status": row.get("status", "") or "active",
+                }
+                created_str = row.get("created", "")
+                if created_str:
+                    try:
+                        meta["created"] = datetime.fromisoformat(str(created_str)).replace(
+                            tzinfo=timezone.utc
+                        )
+                    except (ValueError, TypeError):
+                        pass
+                result[note_id] = meta
+        except Exception:
+            pass
+        return result
 
     def _count_inbound_links(
         self, graph: GraphManager, note_ids: list[str]

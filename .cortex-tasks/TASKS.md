@@ -805,7 +805,7 @@
 ---
 
 ### Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/reranker.py`
 **Depends on:** Task 15.4, 10.1
 

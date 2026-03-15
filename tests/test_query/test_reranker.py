@@ -8,6 +8,8 @@ import pytest
 from cortex.config import RerankerConfig
 from cortex.graph.manager import GraphManager
 from cortex.index.lexical import LexicalIndex
+from cortex.index.models import EmbeddingModel
+from cortex.index.semantic import SemanticIndex
 from cortex.query.pipeline import RankedResult
 from cortex.query.reranker import HeuristicReranker
 from cortex.vault.parser import Link, Note
@@ -221,3 +223,65 @@ def test_no_graph_still_works(lexical, config):
 
     assert len(reranked) == 1
     assert reranked[0].note_id == "n1"
+
+
+def test_semantic_fallback_for_missing_lexical(tmp_path, config):
+    """Notes found only via semantic search get proper reranking boosts via semantic metadata fallback."""
+    lexical = LexicalIndex(tmp_path / "test.duckdb")
+    model = EmbeddingModel()
+    semantic = SemanticIndex(tmp_path / "lance_db", model)
+
+    # Index a note only in semantic index (not in lexical)
+    semantic_only_note = _make_note(
+        "s1", "Semantic Only", "deep learning concepts",
+        note_type="permanent", status="active",
+        created=datetime(2026, 3, 14, tzinfo=timezone.utc),
+    )
+    semantic.index_note(semantic_only_note)
+
+    # Index a note in both indexes
+    both_note = _make_note(
+        "b1", "Both Indexes", "general content",
+        note_type="inbox", status="active",
+        created=datetime(2025, 1, 1, tzinfo=timezone.utc),
+    )
+    lexical.index_note(both_note)
+    semantic.index_note(both_note)
+
+    # Both start with equal scores
+    results = [
+        _make_ranked("s1", "Semantic Only", 0.5, note_type="permanent"),
+        _make_ranked("b1", "Both Indexes", 0.5, note_type="inbox"),
+    ]
+
+    # Without semantic fallback — semantic-only note gets no metadata boosts
+    reranker_no_fallback = HeuristicReranker(config, lexical)
+    reranked_no_fb = reranker_no_fallback.rerank(results, "test query")
+    s1_score_no_fb = next(r.score for r in reranked_no_fb if r.note_id == "s1")
+
+    # With semantic fallback — semantic-only note gets proper boosts
+    reranker_with_fallback = HeuristicReranker(config, lexical, semantic=semantic)
+    reranked_fb = reranker_with_fallback.rerank(results, "test query")
+    s1_score_fb = next(r.score for r in reranked_fb if r.note_id == "s1")
+
+    # The semantic-only note should get a higher score with fallback (recency + status boosts)
+    assert s1_score_fb > s1_score_no_fb
+
+    # With fallback, the permanent+recent note should rank above the inbox+old note
+    assert reranked_fb[0].note_id == "s1"
+
+
+def test_both_lookups_fail_default_scoring(tmp_path, config):
+    """If both lexical and semantic lookups fail, note gets default scoring (no crash)."""
+    lexical = LexicalIndex(tmp_path / "test.duckdb")
+
+    # Note not in any index
+    results = [_make_ranked("missing1", "Missing Note", 0.5)]
+
+    reranker = HeuristicReranker(config, lexical, semantic=None)
+    reranked = reranker.rerank(results, "test query")
+
+    assert len(reranked) == 1
+    assert reranked[0].note_id == "missing1"
+    # Should still get some boost (status defaults to "active")
+    assert reranked[0].score >= 0.5

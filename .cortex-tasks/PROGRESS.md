@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.5 — Populate Snippets for Graph Search Results
-**Next task:** Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
-**Session:** 18
+**Last completed task:** Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
+**Next task:** Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired
+**Session:** 19
 
 ## Completed Tasks
 
@@ -57,6 +57,7 @@
 - Task 15.3 — Add path Field to Semantic Index Schema ✅
 - Task 15.4 — Add status, modified, and supersession Fields to Semantic Index ✅
 - Task 15.5 — Populate Snippets for Graph Search Results ✅
+- Task 15.6 — Ensure Reranker Handles Notes from All Search Sources ✅
 
 ## Notes & Decisions
 
@@ -495,6 +496,15 @@
 - Updated `QueryPipeline._safe_graph_search()` in `src/cortex/query/pipeline.py` to pass `self._vault` to `graph_search()`
 - Files: `src/cortex/graph/queries.py`, `src/cortex/query/pipeline.py`, `tests/test_graph/test_queries.py`
 - Tests: 2 new tests (vault populates snippets, without vault empty snippets), 406 total — all pass
+
+### 2026-03-15 — Task 15.6 ✅
+- Added optional `semantic: SemanticIndex` parameter to `HeuristicReranker.__init__`
+- `_fetch_metadata()` now falls back to semantic index when lexical lookup misses notes
+- New `_fetch_semantic_metadata()` queries LanceDB for note_type, status, created fields
+- `QueryPipeline` now passes `semantic` to `HeuristicReranker` constructor
+- If both lexical and semantic lookups fail, note gets default scoring (no crash)
+- Files: `src/cortex/query/reranker.py`, `src/cortex/query/pipeline.py`, `tests/test_query/test_reranker.py`
+- Tests: 2 new tests (semantic fallback, both-fail default scoring), 408 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
