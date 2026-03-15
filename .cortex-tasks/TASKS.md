@@ -690,7 +690,7 @@
 ## Session 14: Polish, Documentation & Docker Hardening
 
 ### Task 14.1 — Health Check & Error Handling
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/health.py`, error handling audit across all modules
 **Depends on:** All previous tasks
 

@@ -19,6 +19,7 @@ from cortex.capture.task import add_task
 from cortex.capture.thought import capture_thought
 from cortex.config import CortexConfig
 from cortex.graph.manager import GraphManager
+from cortex.health import health_check as _health_check
 from cortex.index.manager import IndexManager
 from cortex.lifecycle.manager import LifecycleManager
 from cortex.lifecycle.staleness import detect_stale_notes
@@ -84,13 +85,18 @@ def _get_drafts() -> DraftManager:
 
 def _get_vault() -> VaultManager:
     if _vault is None:
-        raise RuntimeError("Server not initialized — call init_server() first")
+        raise RuntimeError(
+            "Vault not available. Check that the vault path exists and is readable. "
+            "If running in Docker, verify the volume mount (e.g., -v /path/to/vault:/app/vault)."
+        )
     return _vault
 
 
 def _get_index() -> IndexManager:
     if _index is None:
-        raise RuntimeError("Index not initialized — call init_server(index=...) first")
+        raise RuntimeError(
+            "Search index not available. Run the rebuild_index tool to build it."
+        )
     return _index
 
 
@@ -133,8 +139,11 @@ def mcp_capture_thought(
     Creates a draft note — ALWAYS show the returned preview to the user
     and ask for their approval before calling approve_draft.
     """
-    draft = capture_thought(_get_drafts(), content, tags)
-    return _draft_response(draft)
+    try:
+        draft = capture_thought(_get_drafts(), content, tags)
+        return _draft_response(draft)
+    except Exception as e:
+        return {"error": f"Failed to capture thought: {e}"}
 
 
 @mcp.tool()
@@ -150,8 +159,11 @@ def mcp_add_task(
     Creates a draft note — ALWAYS show the returned preview to the user
     and ask for their approval before calling approve_draft.
     """
-    draft = add_task(_get_drafts(), title, description, due_date, priority, tags)
-    return _draft_response(draft)
+    try:
+        draft = add_task(_get_drafts(), title, description, due_date, priority, tags)
+        return _draft_response(draft)
+    except Exception as e:
+        return {"error": f"Failed to create task: {e}"}
 
 
 @mcp.tool()
@@ -166,8 +178,11 @@ def mcp_save_link(
     Creates a draft note — ALWAYS show the returned preview to the user
     and ask for their approval before calling approve_draft.
     """
-    draft = save_link(_get_drafts(), url, title, description, tags)
-    return _draft_response(draft)
+    try:
+        draft = save_link(_get_drafts(), url, title, description, tags)
+        return _draft_response(draft)
+    except Exception as e:
+        return {"error": f"Failed to save link: {e}"}
 
 
 @mcp.tool()
@@ -182,8 +197,11 @@ def mcp_create_note(
     Creates a draft note — ALWAYS show the returned preview to the user
     and ask for their approval before calling approve_draft.
     """
-    draft = create_note_cmd(_get_drafts(), note_type, title, content, tags)
-    return _draft_response(draft)
+    try:
+        draft = create_note_cmd(_get_drafts(), note_type, title, content, tags)
+        return _draft_response(draft)
+    except Exception as e:
+        return {"error": f"Failed to create note: {e}"}
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +216,12 @@ def approve_draft(draft_id: str) -> dict:
     Only call this after showing the preview to the user and receiving
     explicit approval. Returns the created note's ID and path.
     """
-    note = _get_drafts().approve_draft(draft_id, _get_vault())
+    try:
+        note = _get_drafts().approve_draft(draft_id, _get_vault())
+    except KeyError:
+        return {"error": f"Draft not found: {draft_id}"}
+    except Exception as e:
+        return {"error": f"Failed to approve draft: {e}"}
     return {
         "note_id": note.id,
         "path": str(note.path),
@@ -212,14 +235,24 @@ def update_draft(draft_id: str, edits: dict) -> dict:
     Supported edits: title, content, tags, folder.
     Returns the updated preview so you can show it to the user again.
     """
-    draft = _get_drafts().update_draft(draft_id, edits)
+    try:
+        draft = _get_drafts().update_draft(draft_id, edits)
+    except KeyError:
+        return {"error": f"Draft not found: {draft_id}"}
+    except Exception as e:
+        return {"error": f"Failed to update draft: {e}"}
     return _draft_response(draft)
 
 
 @mcp.tool()
 def reject_draft(draft_id: str) -> dict:
     """Discard a draft. The note will not be saved to the vault."""
-    _get_drafts().reject_draft(draft_id)
+    try:
+        _get_drafts().reject_draft(draft_id)
+    except KeyError:
+        return {"error": f"Draft not found: {draft_id}"}
+    except Exception as e:
+        return {"error": f"Failed to reject draft: {e}"}
     return {"status": "rejected", "draft_id": draft_id}
 
 
@@ -241,7 +274,7 @@ def search_vault(
     try:
         idx = _get_index()
     except RuntimeError:
-        return {"error": "Index not built. Call rebuild_index() first."}
+        return {"error": "Search index not available. Run the rebuild_index tool to build it."}
 
     pipeline = QueryPipeline(idx.lexical, idx.semantic)
 
@@ -651,3 +684,19 @@ def mcp_staleness_review() -> dict:
             for c in candidates
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# Health check tool
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def mcp_health_check() -> dict:
+    """Run a health check on all Cortex subsystems.
+
+    Returns status of: Python process, DuckDB accessibility, vault path
+    readability, and embedding model loaded state.
+    """
+    config = _config or CortexConfig()
+    return _health_check(config)

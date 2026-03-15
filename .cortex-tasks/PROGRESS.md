@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 13.2 — Incremental Index Updates & Draft Conflict Resolution
-**Next task:** Task 14.1 — Health Check & Error Handling
-**Session:** 32 of 14
+**Last completed task:** Task 14.1 — Health Check & Error Handling
+**Next task:** Task 14.2 — Final Eval & Documentation
+**Session:** 33 of 14
 
 ## Completed Tasks
 
@@ -50,6 +50,7 @@
 - Task 12.3 — Source Summarization & Staleness Review ✅
 - Task 13.1 — File Watcher ✅
 - Task 13.2 — Incremental Index Updates & Draft Conflict Resolution ✅
+- Task 14.1 — Health Check & Error Handling ✅
 
 ## Notes & Decisions
 
@@ -430,6 +431,15 @@
 - Deleted notes cause edit drafts to be marked stale
 - Files: `src/cortex/index/manager.py`, `src/cortex/capture/draft.py`, `tests/test_capture/test_draft_conflict.py`
 - Tests: 8 new tests (4 reindex no-op + 4 draft freshness), 384 total — all pass
+
+### 2026-03-15 — Task 14.1 ✅
+- Implemented `health_check(config)` in `src/cortex/health.py` — returns status of Python process, DuckDB accessibility, vault path readability, embedding model loaded
+- Overall status: "healthy" (all ok), "degraded" (vault ok but other issues), "unhealthy" (vault missing)
+- Added `mcp_health_check` MCP tool in `src/cortex/mcp/server.py`
+- Wrapped all unprotected MCP tools (4 capture tools, 3 draft lifecycle tools) with try/except returning clear error dicts
+- Improved error messages: missing vault suggests volume mount check, missing index suggests `rebuild_index`
+- Files: `src/cortex/health.py`, `src/cortex/mcp/server.py`, `tests/test_health.py`
+- Tests: 8 new tests, 392 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
