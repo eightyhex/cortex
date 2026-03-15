@@ -145,7 +145,7 @@
 ## Session 3: Capture Commands & Review-Before-Create Flow
 
 ### Task 3.1 — NoteDraft & DraftManager
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/capture/draft.py`
 **Depends on:** Task 1.3, 2.3
 

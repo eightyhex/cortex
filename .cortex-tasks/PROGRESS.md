@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 2.3 — VaultManager Read Operations
-**Next task:** Task 3.1 — NoteDraft & DraftManager
-**Session:** 3 of 14
+**Last completed task:** Task 3.1 — NoteDraft & DraftManager
+**Next task:** Task 3.2 — VaultManager Write Operations
+**Session:** 4 of 14
 
 ## Completed Tasks
 
@@ -19,6 +19,7 @@
 - Task 2.1 — Frontmatter Parser ✅
 - Task 2.2 — Link & Tag Extractor ✅
 - Task 2.3 — VaultManager Read Operations ✅
+- Task 3.1 — NoteDraft & DraftManager ✅
 
 ## Notes & Decisions
 
@@ -96,6 +97,16 @@
 - `scan_vault()` — parses all `.md` files excluding `_templates/`
 - Files: `src/cortex/vault/manager.py`, `tests/test_vault/test_manager.py`
 - Tests: 14 new tests, 61 total — all pass (init, missing path, scan, template exclusion, get by id, get by path, list with filters, empty results)
+
+### 2026-03-15 — Task 3.1 ✅
+- Implemented `NoteDraft` dataclass with `render_preview()`, `render_markdown()`, and `apply_edits()` methods
+- Implemented `DraftManager` with `create_draft()`, `get_draft()`, `update_draft()`, `reject_draft()`, and `_cleanup_stale_drafts()`
+- File-based JSON persistence in `data/drafts/{draft_id}.json`
+- File naming: `{date}-{type}-{short-hash}-{slug}.md` with slugified titles
+- Note type to folder mapping for all 8 note types
+- Stale draft cleanup (>24h) runs on DraftManager init
+- Files: `src/cortex/capture/draft.py`, `tests/test_capture/test_draft.py`
+- Tests: 20 new tests, 81 total — all pass (preview, markdown render, edits, JSON round-trip, cleanup, reject, folder mapping, file naming)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
