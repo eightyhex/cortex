@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 9.1 — Eval Metrics
-**Next task:** Task 9.2 — Golden Dataset & Eval Harness
-**Session:** 20 of 14
+**Last completed task:** Task 9.2 — Golden Dataset & Eval Harness
+**Next task:** Task 10.1 — Heuristic Reranker
+**Session:** 21 of 14
 
 ## Completed Tasks
 
@@ -38,6 +38,7 @@
 - Task 8.2 — Graph Queries ✅
 - Task 8.3 — Graph Integration into QueryPipeline ✅
 - Task 9.1 — Eval Metrics ✅
+- Task 9.2 — Golden Dataset & Eval Harness ✅
 
 ## Notes & Decisions
 
@@ -297,6 +298,17 @@
 - All return 0.0 for empty/no-match cases
 - Files: `evals/metrics.py`, `tests/test_evals/test_metrics.py`
 - Tests: 18 new tests, all pass (perfect ranking, partial match, no match, beyond k, empty inputs, edge cases)
+
+### 2026-03-15 — Task 9.2 ✅
+- Implemented `EvalHarness` class with `run_all()` and `run_tagged()` methods
+- Implemented `EvalReport` dataclass with `save_snapshot(path)` and `compare_to(previous)` for regression detection (> 0.05 threshold)
+- `EvalReport.from_snapshot()` loads saved snapshots for comparison
+- `CaseResult` tracks per-case MRR, Precision, NDCG and pass/fail
+- `golden_dataset.json` with 25 cases covering keyword (8), semantic (8), relational (4), temporal (3), and mixed categories
+- Snapshot versioning: auto-increments `snapshot_v000.json`, `snapshot_v001.json`, etc.
+- `just eval` runs via `uv run python -m pytest evals/ -v`
+- Files: `evals/harness.py`, `evals/golden_dataset.json`, `tests/test_evals/test_harness.py`
+- Tests: 15 new tests, 275 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

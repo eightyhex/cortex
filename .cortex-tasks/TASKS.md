@@ -485,7 +485,7 @@
 ---
 
 ### Task 9.2 — Golden Dataset & Eval Harness
-**Status:** `pending`
+**Status:** `done`
 **Files:** `evals/golden_dataset.json`, `evals/harness.py`
 **Depends on:** Task 9.1, 6.3
 

@@ -1,5 +1,181 @@
 {
   "version": "0.1",
-  "description": "Annotated query → expected-results pairs for Cortex retrieval eval. See docs/02-ARCHITECTURE.md § 8a.",
-  "cases": []
+  "description": "Annotated query -> expected-results pairs for Cortex retrieval eval. See docs/02-ARCHITECTURE.md § 8a.",
+  "cases": [
+    {
+      "id": "q001",
+      "query": "caching strategies for distributed systems",
+      "category": "semantic",
+      "expected_notes": ["note-memcached-strategy", "note-redis-patterns"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q002",
+      "query": "redis configuration options",
+      "category": "keyword",
+      "expected_notes": ["note-redis-patterns"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q003",
+      "query": "how to handle database migrations safely",
+      "category": "semantic",
+      "expected_notes": ["note-db-migration", "note-schema-versioning"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q004",
+      "query": "PostgreSQL index tuning",
+      "category": "keyword",
+      "expected_notes": ["note-pg-indexes"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q005",
+      "query": "microservices communication patterns",
+      "category": "semantic",
+      "expected_notes": ["note-service-mesh", "note-grpc-patterns"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q006",
+      "query": "REST API design best practices",
+      "category": "keyword",
+      "expected_notes": ["note-api-design"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q007",
+      "query": "machine learning model deployment pipeline",
+      "category": "semantic",
+      "expected_notes": ["note-ml-ops", "note-model-serving"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q008",
+      "query": "kubernetes pod scheduling",
+      "category": "keyword",
+      "expected_notes": ["note-k8s-scheduling"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q009",
+      "query": "notes related to the infrastructure project",
+      "category": "relational",
+      "expected_notes": ["note-k8s-scheduling", "note-service-mesh"],
+      "tags": ["retrieval", "relational"]
+    },
+    {
+      "id": "q010",
+      "query": "what links to the API design note",
+      "category": "relational",
+      "expected_notes": ["note-grpc-patterns", "note-api-design"],
+      "tags": ["retrieval", "relational"]
+    },
+    {
+      "id": "q011",
+      "query": "authentication and authorization patterns",
+      "category": "semantic",
+      "expected_notes": ["note-auth-patterns", "note-oauth-guide"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q012",
+      "query": "OAuth2 token refresh flow",
+      "category": "keyword",
+      "expected_notes": ["note-oauth-guide"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q013",
+      "query": "recent notes about monitoring",
+      "category": "temporal",
+      "expected_notes": ["note-observability"],
+      "tags": ["retrieval", "temporal"]
+    },
+    {
+      "id": "q014",
+      "query": "observability and logging setup",
+      "category": "semantic",
+      "expected_notes": ["note-observability", "note-logging-best-practices"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q015",
+      "query": "structured logging with JSON",
+      "category": "keyword",
+      "expected_notes": ["note-logging-best-practices"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q016",
+      "query": "event sourcing and CQRS",
+      "category": "semantic",
+      "expected_notes": ["note-event-sourcing", "note-cqrs-pattern"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q017",
+      "query": "what was I working on last week",
+      "category": "temporal",
+      "expected_notes": ["note-weekly-review"],
+      "tags": ["retrieval", "temporal"]
+    },
+    {
+      "id": "q018",
+      "query": "CI/CD pipeline configuration",
+      "category": "keyword",
+      "expected_notes": ["note-ci-cd-setup"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q019",
+      "query": "how do the data pipeline notes connect",
+      "category": "relational",
+      "expected_notes": ["note-etl-patterns", "note-data-warehouse"],
+      "tags": ["retrieval", "relational"]
+    },
+    {
+      "id": "q020",
+      "query": "ETL batch processing strategies",
+      "category": "keyword",
+      "expected_notes": ["note-etl-patterns"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q021",
+      "query": "securing APIs against common attacks",
+      "category": "semantic",
+      "expected_notes": ["note-api-security", "note-auth-patterns"],
+      "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q022",
+      "query": "vector database comparison",
+      "category": "keyword",
+      "expected_notes": ["note-vectordb-comparison"],
+      "tags": ["retrieval", "keyword"]
+    },
+    {
+      "id": "q023",
+      "query": "notes from the research project",
+      "category": "relational",
+      "expected_notes": ["note-ml-ops", "note-vectordb-comparison"],
+      "tags": ["retrieval", "relational"]
+    },
+    {
+      "id": "q024",
+      "query": "tasks due this week",
+      "category": "temporal",
+      "expected_notes": ["note-task-deploy", "note-task-review"],
+      "tags": ["retrieval", "temporal"]
+    },
+    {
+      "id": "q025",
+      "query": "data warehouse dimensional modeling",
+      "category": "semantic",
+      "expected_notes": ["note-data-warehouse"],
+      "tags": ["retrieval", "semantic"]
+    }
+  ]
 }
