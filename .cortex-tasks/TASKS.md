@@ -655,7 +655,7 @@
 ## Session 13: File Watching & Incremental Updates
 
 ### Task 13.1 — File Watcher
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/watcher.py`
 **Depends on:** Task 2.3, 4.2, 5.4, 8.1
 

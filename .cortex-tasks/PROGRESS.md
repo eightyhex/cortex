@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 12.3 — Source Summarization & Staleness Review
-**Next task:** Task 13.1 — File Watcher
-**Session:** 30 of 14
+**Last completed task:** Task 13.1 — File Watcher
+**Next task:** Task 13.2 — Incremental Index Updates & Draft Conflict Resolution
+**Session:** 31 of 14
 
 ## Completed Tasks
 
@@ -48,6 +48,7 @@
 - Task 12.1 — Inbox Processing Workflow ✅
 - Task 12.2 — Review Generation Workflow ✅
 - Task 12.3 — Source Summarization & Staleness Review ✅
+- Task 13.1 — File Watcher ✅
 
 ## Notes & Decisions
 
@@ -407,6 +408,17 @@
 - MCP tools: `mcp_summarize_source` (by note_id), `mcp_staleness_review` (full vault scan with path in output)
 - Files: `src/cortex/workflow/summarize.py`, `src/cortex/workflow/staleness_review.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_summarize.py`, `tests/test_workflow/test_staleness_review.py`
 - Tests: 10 new tests, 364 total — all pass
+
+### 2026-03-15 — Task 13.1 ✅
+- Implemented `VaultWatcher` and `_VaultEventHandler` in `src/cortex/vault/watcher.py`
+- Watchdog-based file system watcher with 500ms debouncing (threading.Timer)
+- Detects create, modify, delete, move events for `.md` files
+- Ignores: non-.md files, `.md~` temp files, `.obsidian/`, `_templates/` directories
+- On create/modify: parses note, calls `index_manager.reindex_note()` and `graph_manager.update_note()`
+- On delete: looks up note_id from graph nodes by path, calls `remove_note()` on both
+- Debouncing: rapid saves to same file only trigger one reindex
+- Files: `src/cortex/vault/watcher.py`, `tests/test_vault/test_watcher.py`
+- Tests: 12 new tests, 376 total — all pass (create event, modify event, delete event, delete unknown, debounce rapid, debounce different files, ignore non-md, ignore temp, ignore .obsidian, ignore _templates, accept normal md, start/stop)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
