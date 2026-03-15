@@ -24,7 +24,7 @@
 ---
 
 ### Task 1.2 — Vault Directory Scaffolding
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/manager.py` (partial — `scaffold_vault()` function)
 **Depends on:** Task 1.1
 
