@@ -415,7 +415,7 @@
 ## Session 8: Knowledge Graph (NetworkX)
 
 ### Task 8.1 — GraphManager & Graph Builder
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/graph/manager.py`, `src/cortex/graph/builder.py`
 **Depends on:** Task 2.1, 2.2
 

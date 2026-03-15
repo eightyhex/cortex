@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 7.2 — MCP Search & Admin Tools
-**Next task:** Task 8.1 — GraphManager & Graph Builder
-**Session:** 16 of 14
+**Last completed task:** Task 8.1 — GraphManager & Graph Builder
+**Next task:** Task 8.2 — Graph Queries
+**Session:** 17 of 14
 
 ## Completed Tasks
 
@@ -34,6 +34,7 @@
 - Task 6.3 — QueryPipeline ✅
 - Task 7.1 — MCP Server Setup & Capture Tools ✅
 - Task 7.2 — MCP Search & Admin Tools ✅
+- Task 8.1 — GraphManager & Graph Builder ✅
 
 ## Notes & Decisions
 
@@ -251,6 +252,20 @@
 - Error handling: clear messages for missing index, vault not found, note not found
 - Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
 - Tests: 20 new tests, 211 total — all pass
+
+### 2026-03-15 — Task 8.1 ✅
+- Implemented `GraphManager` in `src/cortex/graph/manager.py` and graph building helpers in `src/cortex/graph/builder.py`
+- `GraphManager.__init__(graph_path)` loads from GraphML or creates empty `nx.MultiDiGraph`
+- `save()` writes GraphML with `.bak` backup
+- `build_from_vault(notes)` clears graph, adds note nodes + project nodes, LINKS_TO/BELONGS_TO_PROJECT/SUPERSEDES edges
+- `update_note(note)` updates/adds a single node and re-creates its outgoing edges
+- `remove_note(note_id)` removes node and all connected edges
+- `builder.py` has `add_note_node()`, `add_edges_for_note()`, `build_graph()` — two-pass construction (nodes first, then edges)
+- Node attributes: `node_type` (note/project), `title`, `note_type`, `path`
+- Edge attributes: `rel_type` (LINKS_TO / BELONGS_TO_PROJECT / SUPERSEDES)
+- Project nodes created from frontmatter `project` field with `project-{name}` ID format
+- Files: `src/cortex/graph/manager.py`, `src/cortex/graph/builder.py`, `tests/test_graph/test_manager.py`
+- Tests: 12 new tests, 223 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
