@@ -30,7 +30,7 @@ CORTEX_VAULT_PATH=~/Documents/my-vault docker compose up -d
 git clone https://github.com/your-org/cortex.git
 cd cortex
 
-# 1. Install dependencies (requires Python 3.11+ and uv)
+# 1. Install dependencies (requires Python 3.13+ and uv)
 uv sync
 
 # 2. Configure your vault
@@ -167,7 +167,7 @@ cortex/
 
 | Component | Technology | Why? |
 |---|---|---|
-| **Language** | Python 3.11+ | Rich ML/NLP ecosystem, fast prototyping |
+| **Language** | Python 3.13+ | Rich ML/NLP ecosystem, fast prototyping |
 | **MCP Server** | FastMCP 3.x | Type-hint schemas, stdio transport, no HTTP overhead |
 | **Full-text Search** | DuckDB FTS | BM25 scoring, embedded, SQL-friendly |
 | **Vector Store** | LanceDB | Embedded, columnar, incremental updates |

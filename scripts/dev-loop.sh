@@ -13,6 +13,8 @@
 #   3. Claude commits the work
 #   4. Script waits, then starts a new session for the next task
 #
+# Logs: All output is saved to logs/dev-loop-<timestamp>.log
+#
 # To stop: Ctrl+C (the current task will finish before exiting)
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -46,15 +48,38 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ── Logging setup ──────────────────────────────────────────────────────────
+LOG_DIR="$PROJECT_DIR/logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/dev-loop-$(date '+%Y%m%d-%H%M%S').log"
+
+# Tee all stdout and stderr to the log file
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 # The prompt sent to each Claude Code session
 TASK_PROMPT='Read .cortex-tasks/PROGRESS.md to find the next task. Then read that task in .cortex-tasks/TASKS.md for the full acceptance criteria. Implement the task, run the tests, update PROGRESS.md and TASKS.md, and commit your work. If all tasks are done, say "ALL TASKS COMPLETE" and exit.'
 
+# ── Helper: check if any pending tasks remain ─────────────────────────────
+all_tasks_done() {
+  # Primary check: look for actual task status lines with `pending`
+  # Only match "**Status:** `pending`" lines — not prose/instructions that mention the word
+  if ! grep -q '^\*\*Status:\*\* `pending`' "$PROJECT_DIR/.cortex-tasks/TASKS.md" 2>/dev/null; then
+    return 0
+  fi
+  # Secondary check: PROGRESS.md says no next task or all complete
+  if grep -qiE "Next task:.*(none|ALL TASKS COMPLETE)" "$PROJECT_DIR/.cortex-tasks/PROGRESS.md" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
 iteration=0
-trap 'echo -e "\n\n⏹  Loop interrupted after $iteration iterations. Work is saved."; exit 0' INT
+trap 'echo -e "\n\n⏹  Loop interrupted after $iteration iterations. Work is saved."; echo "📄 Log: $LOG_FILE"; exit 0' INT
 
 echo "═══════════════════════════════════════════════════"
 echo "  Cortex Dev Loop"
 echo "  Project: $PROJECT_DIR"
+echo "  Log: $LOG_FILE"
 echo "  Max iterations: ${MAX_ITERATIONS:-unlimited}"
 echo "═══════════════════════════════════════════════════"
 echo ""
@@ -73,8 +98,8 @@ while true; do
   echo "───────────────────────────────────────────────────"
 
   # Check if all tasks are done
-  if grep -q "Next task:.*none\|ALL TASKS COMPLETE" "$PROJECT_DIR/.cortex-tasks/PROGRESS.md" 2>/dev/null; then
-    echo "✅ All tasks complete! Exiting loop."
+  if all_tasks_done; then
+    echo "✅ All tasks complete! No pending tasks remain in TASKS.md."
     break
   fi
 
@@ -82,29 +107,31 @@ while true; do
   echo ""
   echo "Current progress:"
   head -10 "$PROJECT_DIR/.cortex-tasks/PROGRESS.md" | grep -E "Last completed|Next task|Session" || true
+  PENDING_COUNT=$(grep -c '^\*\*Status:\*\* `pending`' "$PROJECT_DIR/.cortex-tasks/TASKS.md" 2>/dev/null || echo "0")
+  echo "Pending tasks: $PENDING_COUNT"
   echo ""
 
   if $DRY_RUN; then
-    echo "[DRY RUN] Would run: claude --print \"$TASK_PROMPT\""
+    echo "[DRY RUN] Would run: claude -p --dangerously-skip-permissions \"$TASK_PROMPT\""
     echo ""
     break
   fi
 
   # Run Claude Code
-  # Using --print to run non-interactively. Claude reads the task, does the work, exits.
   cd "$PROJECT_DIR"
-  claude --print "$TASK_PROMPT" || {
-    echo "⚠  Claude session exited with error. Pausing before retry..."
+  claude -p --dangerously-skip-permissions "$TASK_PROMPT" || {
+    echo "⚠  Claude session exited with error (iteration $iteration). Pausing before retry..."
     sleep 10
     continue
   }
 
   echo ""
-  echo "✅ Session complete. Pausing ${PAUSE_SECONDS}s before next iteration..."
+  echo "✅ Session $iteration complete. Pausing ${PAUSE_SECONDS}s before next iteration..."
   sleep "$PAUSE_SECONDS"
 done
 
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo "  Loop finished after $iteration iterations"
+echo "  📄 Full log: $LOG_FILE"
 echo "═══════════════════════════════════════════════════"

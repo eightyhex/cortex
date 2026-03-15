@@ -252,7 +252,7 @@ evergreen: <bool|null>             # If true, exempt from staleness detection (c
 - **No vendor lock-in:** All data in plain markdown, indexes are rebuildable
 - **Single user:** No multi-user or auth needed
 - **Obsidian-compatible:** The vault must remain a valid Obsidian vault at all times
-- **Python 3.11+:** Primary implementation language
+- **Python 3.13+:** Primary implementation language
 - **uv:** Project management, dependency resolution, and script execution
 - **Docker:** The entire system is containerized for one-command setup. Docker Compose orchestrates the MCP server with volume mounts for the vault and data directories. No manual Python/dependency installation required for end users.
 - **Git-backed vault:** The vault should be a git repository for version history and backup. Obsidian Git plugin recommended for auto-commit. Push to a private remote for offsite backup.

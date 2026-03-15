@@ -7,7 +7,7 @@
 # =============================================================================
 
 # Stage 1: Dependencies
-FROM python:3.11-slim AS deps
+FROM python:3.13-slim AS deps
 WORKDIR /app
 RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock ./
@@ -18,7 +18,7 @@ FROM deps AS models
 RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('nomic-ai/nomic-embed-text-v1.5')"
 
 # Stage 3: Runtime
-FROM python:3.11-slim AS runtime
+FROM python:3.13-slim AS runtime
 WORKDIR /app
 
 # Install uv in runtime for running the app
