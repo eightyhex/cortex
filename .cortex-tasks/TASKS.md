@@ -469,7 +469,7 @@
 ## Session 9: Retrieval Eval Framework
 
 ### Task 9.1 — Eval Metrics
-**Status:** `pending`
+**Status:** `done`
 **File:** `evals/metrics.py`
 **Depends on:** Task 6.3
 

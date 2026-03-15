@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 8.3 — Graph Integration into QueryPipeline
-**Next task:** Task 9.1 — Eval Metrics
-**Session:** 19 of 14
+**Last completed task:** Task 9.1 — Eval Metrics
+**Next task:** Task 9.2 — Golden Dataset & Eval Harness
+**Session:** 20 of 14
 
 ## Completed Tasks
 
@@ -37,6 +37,7 @@
 - Task 8.1 — GraphManager & Graph Builder ✅
 - Task 8.2 — Graph Queries ✅
 - Task 8.3 — Graph Integration into QueryPipeline ✅
+- Task 9.1 — Eval Metrics ✅
 
 ## Notes & Decisions
 
@@ -287,6 +288,15 @@
 - Project nodes created from frontmatter `project` field with `project-{name}` ID format
 - Files: `src/cortex/graph/manager.py`, `src/cortex/graph/builder.py`, `tests/test_graph/test_manager.py`
 - Tests: 12 new tests, 223 total — all pass
+
+### 2026-03-15 — Task 9.1 ✅
+- Implemented `mrr_at_k()`, `precision_at_k()`, `ndcg_at_k()` in `evals/metrics.py`
+- MRR: returns 1/rank of first relevant result in top-k
+- Precision: fraction of top-k results that are relevant
+- NDCG: normalized DCG with binary relevance
+- All return 0.0 for empty/no-match cases
+- Files: `evals/metrics.py`, `tests/test_evals/test_metrics.py`
+- Tests: 18 new tests, all pass (perfect ranking, partial match, no match, beyond k, empty inputs, edge cases)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
