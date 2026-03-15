@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
-**Next task:** Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired
+**Last completed task:** Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired
+**Next task:** ALL TASKS COMPLETE
 **Session:** 19
 
 ## Completed Tasks
@@ -58,6 +58,7 @@
 - Task 15.4 — Add status, modified, and supersession Fields to Semantic Index ✅
 - Task 15.5 — Populate Snippets for Graph Search Results ✅
 - Task 15.6 — Ensure Reranker Handles Notes from All Search Sources ✅
+- Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired ✅
 
 ## Notes & Decisions
 
@@ -496,6 +497,19 @@
 - Updated `QueryPipeline._safe_graph_search()` in `src/cortex/query/pipeline.py` to pass `self._vault` to `graph_search()`
 - Files: `src/cortex/graph/queries.py`, `src/cortex/query/pipeline.py`, `tests/test_graph/test_queries.py`
 - Tests: 2 new tests (vault populates snippets, without vault empty snippets), 406 total — all pass
+
+### 2026-03-15 — Task 15.7 ✅
+- Created `tests/test_mcp/test_search_integration.py` with 7 integration tests
+- Full setup fixture: 6 notes (permanent, concept, source, archived, task, project) with wikilinks
+- Builds all 3 indexes (lexical, semantic, graph) and initializes MCP server
+- Verified: search results include created/modified ISO timestamps
+- Verified: context output shows actual dates (not "unknown")
+- Verified: graph-expanded results include non-empty snippets
+- Verified: archived notes scored lower than active notes
+- Verified: custom reranker config from settings is respected
+- Verified: multiple search sources (lexical, semantic) contribute results
+- Files: `tests/test_mcp/test_search_integration.py`
+- Tests: 7 new tests, 415 total — all pass
 
 ### 2026-03-15 — Task 15.6 ✅
 - Added optional `semantic: SemanticIndex` parameter to `HeuristicReranker.__init__`
