@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 11.4 — Lifecycle MCP Tools & Eval Cases
-**Next task:** Task 12.1 — Inbox Processing Workflow
-**Session:** 27 of 14
+**Last completed task:** Task 12.1 — Inbox Processing Workflow
+**Next task:** Task 12.2 — Review Generation Workflow
+**Session:** 28 of 14
 
 ## Completed Tasks
 
@@ -45,6 +45,7 @@
 - Task 11.2 — LifecycleManager: Archive & Supersede ✅
 - Task 11.3 — Staleness Detection ✅
 - Task 11.4 — Lifecycle MCP Tools & Eval Cases ✅
+- Task 12.1 — Inbox Processing Workflow ✅
 
 ## Notes & Decisions
 
@@ -376,6 +377,15 @@
 - Added 11 lifecycle-specific eval cases (q026–q036) covering supersession ranking, archival penalty, and edit consistency
 - Files: `src/cortex/mcp/server.py`, `evals/golden_dataset.json`, `tests/test_mcp/test_lifecycle_tools.py`
 - Tests: 17 new tests, 335 total — all pass
+
+### 2026-03-15 — Task 12.1 ✅
+- Implemented `process_inbox(vault)` in `src/cortex/workflow/inbox.py`
+- `InboxItem` dataclass with: note_id, title, summary, suggested_type, suggested_folder, suggested_tags, age_days, path
+- Content heuristics: URLs → source/10-sources, TODO/FIXME/checkboxes → task/02-tasks, default → concept/20-concepts
+- Summary truncated to 200 chars; items sorted by age descending (oldest first)
+- MCP tool: `mcp_process_inbox` in `src/cortex/mcp/server.py` returns formatted items for Claude to present
+- Files: `src/cortex/workflow/inbox.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_inbox.py`
+- Tests: 10 new tests, 345 total — all pass (empty inbox, list notes, ignore non-inbox, summary, URL suggestion, TODO suggestion, age calculation, sort order, tag suggestions, MCP tool integration)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

@@ -607,7 +607,7 @@
 ## Session 12: Workflows
 
 ### Task 12.1 — Inbox Processing Workflow
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/workflow/inbox.py`
 **Depends on:** Task 2.3, 6.3
 

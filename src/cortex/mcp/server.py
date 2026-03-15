@@ -24,6 +24,7 @@ from cortex.lifecycle.manager import LifecycleManager
 from cortex.lifecycle.staleness import detect_stale_notes
 from cortex.query.pipeline import QueryPipeline
 from cortex.vault.manager import VaultManager
+from cortex.workflow.inbox import process_inbox as _process_inbox
 
 # ---------------------------------------------------------------------------
 # Server instance
@@ -517,5 +518,42 @@ def detect_stale() -> dict:
                 "suggested_action": c.suggested_action,
             }
             for c in candidates
+        ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Workflow tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def mcp_process_inbox() -> dict:
+    """Process inbox items — list notes in 00-inbox/ with categorization suggestions.
+
+    Returns each inbox item with: summary, suggested target folder, suggested tags,
+    and age in days. Present these to the user for triage decisions.
+    """
+    try:
+        vault = _get_vault()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    items = _process_inbox(vault)
+
+    return {
+        "total": len(items),
+        "items": [
+            {
+                "note_id": item.note_id,
+                "title": item.title,
+                "summary": item.summary,
+                "suggested_type": item.suggested_type,
+                "suggested_folder": item.suggested_folder,
+                "suggested_tags": item.suggested_tags,
+                "age_days": item.age_days,
+                "path": item.path,
+            }
+            for item in items
         ],
     }
