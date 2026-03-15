@@ -74,7 +74,7 @@
 ---
 
 ### Task 1.5 — Justfile Dev Commands
-**Status:** `pending`
+**Status:** `done`
 **File:** `justfile`
 **Depends on:** Task 1.1, 1.4
 

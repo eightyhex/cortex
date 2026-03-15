@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 1.4 — Dockerfile & Docker Compose
-**Next task:** Task 1.5 — Justfile Dev Commands
-**Session:** 1 of 14
+**Last completed task:** Task 1.5 — Justfile Dev Commands
+**Next task:** Task 2.1 — Frontmatter Parser
+**Session:** 2 of 14
 
 ## Completed Tasks
 
@@ -15,6 +15,7 @@
 - Task 1.2 — Vault Directory Scaffolding ✅
 - Task 1.3 — Note Templates Module ✅
 - Task 1.4 — Dockerfile & Docker Compose ✅
+- Task 1.5 — Justfile Dev Commands ✅
 
 ## Notes & Decisions
 
@@ -57,6 +58,14 @@
 - Updated .dockerignore: removed uv.lock exclusion (needed for --frozen install), kept all other exclusions
 - Files: `Dockerfile`, `docker-compose.yml`, `docker-compose.gpu.yml`, `scripts/docker-entrypoint.sh`, `.dockerignore`
 - Tests: 22 existing tests still pass (no new tests needed — Docker files are config, not code)
+
+### 2026-03-15 — Task 1.5 ✅
+- Updated justfile with all required dev and Docker commands
+- Commands: `dev`, `test`, `lint`, `format`, `fmt` (alias), `index-rebuild`, `eval`, `docker-build`, `docker-up`, `docker-down`, `docker-shell`
+- `just dev` runs `uv run python -m cortex.main`; `just test` runs `uv run pytest`; `just docker-build` runs `docker compose build`
+- Added `docker-shell` for interactive container access
+- Files: `justfile`
+- Tests: 22 existing tests still pass (justfile is config, not code)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
