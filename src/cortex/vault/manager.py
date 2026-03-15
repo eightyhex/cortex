@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
+
+import yaml
 
 from cortex.config import CortexConfig
 from cortex.vault.parser import Note, parse_note
@@ -47,7 +50,7 @@ def scaffold_vault(vault_path: Path) -> None:
 
 
 class VaultManager:
-    """Read-side operations for an Obsidian vault."""
+    """Read and write operations for an Obsidian vault."""
 
     def __init__(self, vault_path: Path, config: CortexConfig) -> None:
         self.vault_path = Path(vault_path).resolve()
@@ -97,3 +100,41 @@ class VaultManager:
                 continue
             notes.append(parse_note(md_file))
         return notes
+
+    def create_note(self, draft) -> Note:
+        """Write a NoteDraft to the vault and return the parsed Note.
+
+        Creates the target folder if it doesn't exist, writes the rendered
+        markdown to disk, and returns the parsed Note.
+        """
+        target_dir = self.vault_path / draft.target_folder
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        file_path = target_dir / draft.target_filename
+        file_path.write_text(draft.render_markdown(), encoding="utf-8")
+
+        return parse_note(file_path)
+
+    def update_note(
+        self, note_id: str, content: str | None = None, metadata: dict | None = None
+    ) -> Note:
+        """Update an existing note's content and/or metadata.
+
+        Finds the note by ID, updates the specified fields, bumps the
+        `modified` timestamp, writes the file, and returns the updated Note.
+        """
+        note = self.get_note(note_id)
+        fm = dict(note.frontmatter)
+
+        if metadata:
+            fm.update(metadata)
+
+        fm["modified"] = datetime.now(timezone.utc).isoformat()
+
+        body = content if content is not None else note.content
+
+        fm_str = yaml.dump(fm, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        md = f"---\n{fm_str}---\n\n{body}\n"
+        note.path.write_text(md, encoding="utf-8")
+
+        return parse_note(note.path)

@@ -168,7 +168,7 @@
 ---
 
 ### Task 3.2 — VaultManager Write Operations
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/manager.py` (extend)
 **Depends on:** Task 3.1
 

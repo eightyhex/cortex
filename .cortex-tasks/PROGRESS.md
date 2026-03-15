@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 3.1 — NoteDraft & DraftManager
-**Next task:** Task 3.2 — VaultManager Write Operations
-**Session:** 4 of 14
+**Last completed task:** Task 3.2 — VaultManager Write Operations
+**Next task:** Task 3.3 — Capture Commands
+**Session:** 5 of 14
 
 ## Completed Tasks
 
@@ -20,6 +20,7 @@
 - Task 2.2 — Link & Tag Extractor ✅
 - Task 2.3 — VaultManager Read Operations ✅
 - Task 3.1 — NoteDraft & DraftManager ✅
+- Task 3.2 — VaultManager Write Operations ✅
 
 ## Notes & Decisions
 
@@ -107,6 +108,13 @@
 - Stale draft cleanup (>24h) runs on DraftManager init
 - Files: `src/cortex/capture/draft.py`, `tests/test_capture/test_draft.py`
 - Tests: 20 new tests, 81 total — all pass (preview, markdown render, edits, JSON round-trip, cleanup, reject, folder mapping, file naming)
+
+### 2026-03-15 — Task 3.2 ✅
+- Implemented `create_note(draft)` and `update_note(note_id, content, metadata)` in `VaultManager`
+- `create_note` writes rendered markdown to `{vault_path}/{target_folder}/{target_filename}`, ensures parent dir exists
+- `update_note` finds note by ID, merges metadata, bumps `modified` timestamp, rewrites file
+- Files: `src/cortex/vault/manager.py`, `tests/test_vault/test_manager_write.py`
+- Tests: 7 new tests, 88 total — all pass (create from draft, ensure parent dir, file content match, update content, update metadata, bump modified, persist to disk)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
