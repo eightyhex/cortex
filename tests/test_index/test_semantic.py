@@ -135,3 +135,14 @@ class TestSemanticIndex:
         assert r.score > 0
         assert len(r.snippet) > 0
         assert r.note_type == "concept"
+
+    def test_search_result_includes_path(self, semantic_index):
+        """Search results include the correct note path."""
+        note = _make_note("p1", "Path Test", "Content for testing path field in semantic search results.")
+        semantic_index.index_note(note)
+
+        results = semantic_index.search("path field semantic search")
+        assert len(results) >= 1
+        r = results[0]
+        assert r.note_id == "p1"
+        assert r.path == "20-concepts/path-test.md"

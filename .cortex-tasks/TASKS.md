@@ -754,7 +754,7 @@
 ---
 
 ### Task 15.3 — Add path Field to Semantic Index Schema
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/semantic.py`
 **Depends on:** Task 5.3
 

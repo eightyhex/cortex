@@ -30,6 +30,7 @@ class SemanticIndex:
         pa.field("vector", pa.list_(pa.float32(), 768)),
         pa.field("tags", pa.utf8()),
         pa.field("created", pa.utf8()),
+        pa.field("path", pa.utf8()),
     ])
 
     def __init__(self, db_path: Path, model: EmbeddingModel) -> None:
@@ -63,6 +64,8 @@ class SemanticIndex:
             note.created.isoformat() if note.created else ""
         )
 
+        path_str = str(note.path) if note.path else ""
+
         records = []
         for chunk, vector in zip(chunks, vectors):
             records.append({
@@ -74,6 +77,7 @@ class SemanticIndex:
                 "vector": vector,
                 "tags": tags_str,
                 "created": created_str,
+                "path": path_str,
             })
 
         table = self._get_table()
@@ -131,7 +135,7 @@ class SemanticIndex:
                     score=score,
                     snippet=row["text"][:200],
                     note_type=row["note_type"],
-                    path="",
+                    path=row.get("path", ""),
                 )
 
         return sorted(seen.values(), key=lambda r: r.score, reverse=True)

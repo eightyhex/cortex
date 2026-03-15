@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
-**Next task:** Task 15.3 — Add path Field to Semantic Index Schema
-**Session:** 15
+**Last completed task:** Task 15.3 — Add path Field to Semantic Index Schema
+**Next task:** Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
+**Session:** 16
 
 ## Completed Tasks
 
@@ -54,6 +54,7 @@
 - Task 14.2 — Final Eval & Documentation ✅
 - Task 15.1 — Wire Graph Manager into search_vault MCP Tool ✅
 - Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline ✅
+- Task 15.3 — Add path Field to Semantic Index Schema ✅
 
 ## Notes & Decisions
 
@@ -467,6 +468,14 @@
 - Now `QueryPipeline` receives the active config's reranker weights (recency, type, link, status)
 - Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
 - Tests: 1 new test (custom reranker config), 402 total — all pass
+
+### 2026-03-15 — Task 15.3 ✅
+- Added `path` field (`pa.utf8()`) to LanceDB `_schema` in `src/cortex/index/semantic.py`
+- `index_note()` now stores `str(note.path)` in the `path` field for each chunk
+- `search()` now returns `SearchResult` with the actual `path` value populated (via `row.get("path", "")`)
+- `rebuild()` includes path in stored records (inherits from `index_note`)
+- Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
+- Tests: 1 new test (`test_search_result_includes_path`), 403 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
