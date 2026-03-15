@@ -95,7 +95,8 @@ def _get_vault() -> VaultManager:
 def _get_index() -> IndexManager:
     if _index is None:
         raise RuntimeError(
-            "Search index not available. Run the rebuild_index tool to build it."
+            "Search index not available. "
+            "Ensure Cortex was started with index support enabled (see main.py)."
         )
     return _index
 
@@ -276,7 +277,18 @@ def search_vault(
     except RuntimeError:
         return {"error": "Search index not available. Run the rebuild_index tool to build it."}
 
-    pipeline = QueryPipeline(idx.lexical, idx.semantic)
+    try:
+        vault = _get_vault()
+    except RuntimeError:
+        vault = None
+
+    # Wire graph manager into pipeline for graph expansion (if available)
+    try:
+        graph = _get_graph()
+    except RuntimeError:
+        graph = None
+
+    pipeline = QueryPipeline(idx.lexical, idx.semantic, graph=graph, vault=vault)
 
     try:
         loop = asyncio.get_event_loop()
@@ -290,22 +302,32 @@ def search_vault(
     if note_type:
         results = [r for r in results if r.note_type == note_type]
 
+    # Enrich results with dates from vault
+    enriched = []
+    for r in results:
+        entry = {
+            "note_id": r.note_id,
+            "title": r.title,
+            "score": round(r.score, 4),
+            "matched_by": r.matched_by,
+            "snippet": r.snippet,
+            "note_type": r.note_type,
+        }
+        if vault:
+            try:
+                note = vault.get_note(r.note_id)
+                entry["created"] = note.created.isoformat()
+                entry["modified"] = note.modified.isoformat()
+            except (KeyError, FileNotFoundError):
+                pass
+        enriched.append(entry)
+
     return {
         "query": result.query,
-        "total": len(results),
+        "total": len(enriched),
         "explanation": result.explanation,
         "context": result.context,
-        "results": [
-            {
-                "note_id": r.note_id,
-                "title": r.title,
-                "score": round(r.score, 4),
-                "matched_by": r.matched_by,
-                "snippet": r.snippet,
-                "note_type": r.note_type,
-            }
-            for r in results
-        ],
+        "results": enriched,
     }
 
 

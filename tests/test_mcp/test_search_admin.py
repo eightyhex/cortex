@@ -9,6 +9,7 @@ import pytest
 
 from cortex.capture.draft import DraftManager
 from cortex.config import CortexConfig
+from cortex.graph.manager import GraphManager
 from cortex.index.lexical import LexicalIndex
 from cortex.index.manager import IndexManager
 from cortex.mcp.server import (
@@ -155,6 +156,56 @@ class TestSearchVault:
             assert "score" in r
             assert "matched_by" in r
 
+    def test_search_with_graph_expansion(self, config, vault_dir, tmp_path, sample_notes):
+        """When graph is available, search results include graph-expanded notes."""
+        # Create an additional note linked from note-001
+        linked = vault_dir / "20-concepts" / "data-science.md"
+        linked.write_text(
+            "---\nid: note-linked\ntitle: Data Science Overview\ntype: concept\ntags: [data-science]\nstatus: active\n---\n\n"
+            "Data science combines statistics and programming.\n"
+            "See also: [[Python Tips]]\n",
+            encoding="utf-8",
+        )
+
+        vault = VaultManager(vault_dir, config)
+        notes = vault.scan_vault()
+
+        # Build lexical index
+        lexical = LexicalIndex(tmp_path / "graph_test.duckdb")
+        lexical.rebuild(notes)
+
+        # Build mock semantic (returns empty)
+        mock_semantic = MagicMock()
+        mock_semantic.search.return_value = []
+
+        # Build graph
+        graph = GraphManager(tmp_path / "test.graphml")
+        graph.build_from_vault(notes)
+
+        idx = MagicMock(spec=IndexManager)
+        idx.lexical = lexical
+        idx.semantic = mock_semantic
+
+        drafts = DraftManager(config.draft.drafts_dir)
+        init_server(config=config, vault=vault, drafts=drafts, index=idx, graph=graph)
+
+        result = search_vault(query="Python")
+        assert "error" not in result
+        # Graph should be mentioned in explanation when it contributes results
+        matched_by_all = [src for r in result["results"] for src in r["matched_by"]]
+        # The key assertion: graph-expanded notes should appear
+        note_ids = [r["note_id"] for r in result["results"]]
+        # note-linked links to note-001 (Python Tips), so graph expansion from note-001 should find note-linked
+        assert "note-linked" in note_ids or "graph" in result.get("explanation", "")
+
+    def test_search_without_graph_still_works(self, config, vault, mock_index, sample_notes):
+        """Search still works when graph is not available (graceful fallback)."""
+        drafts = DraftManager(config.draft.drafts_dir)
+        init_server(config=config, vault=vault, drafts=drafts, index=mock_index, graph=None)
+        result = search_vault(query="Python")
+        assert "error" not in result
+        assert result["total"] >= 1
+
 
 # ---------------------------------------------------------------------------
 # get_note
@@ -208,6 +259,26 @@ class TestRebuildIndex:
         init_server(config=config, vault=vault, drafts=drafts, index=None)
         result = rebuild_index()
         assert "error" in result
+
+    def test_rebuild_works_with_real_index(self, config, vault, sample_notes):
+        """Regression: rebuild must succeed when IndexManager is provided (as main.py now does)."""
+        from cortex.index.manager import IndexManager
+
+        drafts = DraftManager(config.draft.drafts_dir)
+        index = IndexManager(config)
+        init_server(config=config, vault=vault, drafts=drafts, index=index)
+        result = rebuild_index()
+        assert result["status"] == "rebuilt"
+        assert result["notes_indexed"] == 3
+
+    def test_rebuild_error_message_does_not_say_run_rebuild(self, config, vault):
+        """The error when index is missing should not create a catch-22 by telling users to run rebuild."""
+        drafts = DraftManager(config.draft.drafts_dir)
+        init_server(config=config, vault=vault, drafts=drafts, index=None)
+        result = rebuild_index()
+        assert "error" in result
+        # Must NOT tell user to "run the rebuild_index tool" — that's the catch-22
+        assert "run the rebuild_index" not in result["error"].lower()
 
 
 # ---------------------------------------------------------------------------

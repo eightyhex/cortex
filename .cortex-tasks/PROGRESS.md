@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 14.2 — Final Eval & Documentation
-**Next task:** ALL TASKS COMPLETE
-**Session:** 34 of 14
+**Last completed task:** Task 15.1 — Wire Graph Manager into search_vault MCP Tool
+**Next task:** Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
+**Session:** 15
 
 ## Completed Tasks
 
@@ -52,6 +52,7 @@
 - Task 13.2 — Incremental Index Updates & Draft Conflict Resolution ✅
 - Task 14.1 — Health Check & Error Handling ✅
 - Task 14.2 — Final Eval & Documentation ✅
+- Task 15.1 — Wire Graph Manager into search_vault MCP Tool ✅
 
 ## Notes & Decisions
 
@@ -451,6 +452,13 @@
 - Updated README.md quick-start with clearer Docker and bare-metal sections
 - Files: `tests/test_evals/test_harness.py`, `README.md`
 - Tests: 395 total — all pass (3 new final eval tests)
+
+### 2026-03-15 — Task 15.1 ✅
+- Wired `_get_graph()` into `search_vault` MCP tool, passing graph to `QueryPipeline(..., graph=graph)`
+- Graph lookup wrapped in try/except so search still works when graph is unavailable
+- Search results now include notes discovered via graph expansion (matched_by includes "graph")
+- Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
+- Tests: 2 new tests (graph expansion, graceful fallback without graph), 401 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

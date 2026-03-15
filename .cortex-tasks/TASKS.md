@@ -720,4 +720,124 @@
 
 ---
 
-*End of Task Plan — 35 atomic tasks across 14 sessions*
+## Session 15: Data Wiring & Search Pipeline Completeness
+
+### Task 15.1 — Wire Graph Manager into search_vault MCP Tool
+**Status:** `done`
+**File:** `src/cortex/mcp/server.py`
+**Depends on:** Task 8.3, 7.2
+
+**Description:** The `search_vault` MCP tool creates a `QueryPipeline` without passing the graph manager, even though `_get_graph()` is available. This means graph expansion (discovering related notes through wikilinks) is completely disabled during search. The pipeline was designed to accept a graph (Task 8.3 wired it in), but the MCP tool never passes it.
+
+**Acceptance Criteria:**
+- [ ] `search_vault` in `server.py` calls `_get_graph()` and passes it to `QueryPipeline(..., graph=graph)`
+- [ ] Graph lookup is wrapped in try/except so search still works if graph is unavailable
+- [ ] Search results now include notes discovered via graph expansion (matched_by includes "graph")
+- [ ] `tests/test_mcp/test_search_admin.py` updated with test: search with graph available returns graph-expanded results
+- [ ] Existing search tests still pass
+
+---
+
+### Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
+**Status:** `pending`
+**File:** `src/cortex/mcp/server.py`
+**Depends on:** Task 10.1, 7.2
+
+**Description:** Users configure custom reranker weights in `settings.yaml` (recency_weight, type_weight, link_weight, status_weight, recency_halflife_days) but `search_vault` creates `QueryPipeline` without passing `reranker_config`. The pipeline falls back to hardcoded defaults, silently ignoring the user's configuration.
+
+**Acceptance Criteria:**
+- [ ] `search_vault` in `server.py` loads `RerankerConfig` from the active `CortexConfig` and passes it to `QueryPipeline(..., reranker_config=config.reranker)`
+- [ ] Verify that custom weights from `settings.yaml` are actually used during reranking (not defaults)
+- [ ] `tests/test_mcp/test_search_admin.py` updated with test: custom reranker config affects result ordering
+- [ ] Existing search and reranker tests still pass
+
+---
+
+### Task 15.3 — Add path Field to Semantic Index Schema
+**Status:** `pending`
+**File:** `src/cortex/index/semantic.py`
+**Depends on:** Task 5.3
+
+**Description:** The semantic index LanceDB schema is missing the `path` field. Lexical search results include `path` but semantic results always return `path=""`. This causes inconsistency when downstream code (context assembler, MCP tools) tries to reference file locations for semantically-matched notes.
+
+**Acceptance Criteria:**
+- [ ] Add `pa.field("path", pa.utf8())` to the `_schema` in `semantic.py`
+- [ ] `index_note()` stores `str(note.path)` in the `path` field for each chunk
+- [ ] `search()` returns `SearchResult` with the actual `path` value populated (not empty string)
+- [ ] `rebuild()` includes path in the stored records
+- [ ] `tests/test_index/test_semantic.py` updated with test: search result includes correct path
+- [ ] Existing semantic index tests still pass
+
+---
+
+### Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
+**Status:** `pending`
+**File:** `src/cortex/index/semantic.py`
+**Depends on:** Task 15.3
+
+**Description:** The semantic index is missing `status`, `modified`, `supersedes`, and `superseded_by` fields that the lexical index stores. When the reranker fetches metadata to compute boosts (recency, status), it can only get this data from the lexical index. Notes found only via semantic search may not be reranked correctly if they're missing from the lexical results.
+
+**Acceptance Criteria:**
+- [ ] Add `status`, `modified`, `supersedes`, `superseded_by` fields to the LanceDB schema
+- [ ] `index_note()` populates these fields from `note.frontmatter` and `note.modified`
+- [ ] `search()` returns `SearchResult` with these fields available (extend `SearchResult` or provide access via metadata)
+- [ ] `rebuild()` includes these fields in stored records
+- [ ] `tests/test_index/test_semantic.py` updated with test: archived/superseded notes have correct metadata in search results
+- [ ] Existing semantic index tests still pass
+
+---
+
+### Task 15.5 — Populate Snippets for Graph Search Results
+**Status:** `pending`
+**File:** `src/cortex/graph/queries.py`
+**Depends on:** Task 8.2
+
+**Description:** `graph_search()` returns `SearchResult` objects with `snippet=""` because graph nodes only store title, note_type, and path — not content. Users see no preview for notes discovered through graph expansion, making it hard to judge relevance without opening each note.
+
+**Acceptance Criteria:**
+- [ ] `graph_search()` accepts an optional `vault` parameter (`VaultManager | None`)
+- [ ] When vault is provided, fetches note content and populates `snippet` with first 200 characters of the note body
+- [ ] When vault is not provided, falls back to `snippet=""` (no regression)
+- [ ] `QueryPipeline._safe_graph_search()` passes vault to `graph_search()` when available
+- [ ] `tests/test_graph/test_queries.py` updated with test: graph_search with vault returns populated snippets
+- [ ] Existing graph query tests still pass
+
+---
+
+### Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
+**Status:** `pending`
+**File:** `src/cortex/query/reranker.py`
+**Depends on:** Task 15.4, 10.1
+
+**Description:** The `HeuristicReranker` fetches metadata from the DuckDB lexical index to compute boosts. If a note was found only via semantic or graph search and doesn't exist in the lexical index, metadata lookup fails silently and the note gets no boosts. After Task 15.4 adds metadata to the semantic index, the reranker should be able to fall back to semantic metadata when lexical metadata is unavailable.
+
+**Acceptance Criteria:**
+- [ ] `HeuristicReranker.__init__` accepts an optional `semantic: SemanticIndex` parameter
+- [ ] When lexical metadata lookup fails for a note, the reranker attempts to fetch metadata from the semantic index as fallback
+- [ ] If both lookups fail, the note still gets default scoring (no crash, no skip)
+- [ ] `tests/test_query/test_reranker.py` updated with test: note found only via semantic search gets proper reranking boosts
+- [ ] Existing reranker tests still pass
+
+---
+
+### Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired
+**Status:** `pending`
+**File:** `tests/test_mcp/test_search_integration.py` (new)
+**Depends on:** Task 15.1, 15.2, 15.3, 15.4, 15.5, 15.6
+
+**Description:** End-to-end integration test verifying that all components are properly wired through the search pipeline: vault notes with full metadata are passed through to context assembly, graph expansion produces results with snippets, reranker uses user config, and search results include created/modified dates.
+
+**Acceptance Criteria:**
+- [ ] Test creates a vault with 5+ notes including wikilinks, varied types, and one archived note
+- [ ] Test builds all indexes (lexical, semantic, graph) and runs `search_vault` MCP tool
+- [ ] Asserts: search results include `created` and `modified` ISO timestamps
+- [ ] Asserts: context output shows actual created dates (not "unknown")
+- [ ] Asserts: graph-expanded results include non-empty snippets
+- [ ] Asserts: archived notes are scored lower than active notes
+- [ ] Asserts: reranker config from settings is respected (not defaults)
+- [ ] All 395+ existing tests still pass
+- [ ] Run eval harness — no regression from previous snapshot
+
+---
+
+*End of Task Plan — 42 atomic tasks across 15 sessions*
