@@ -201,7 +201,7 @@
 ---
 
 ### Task 3.4 — DraftManager.approve_draft Integration
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/capture/draft.py` (extend)
 **Depends on:** Task 3.2, 3.3
 

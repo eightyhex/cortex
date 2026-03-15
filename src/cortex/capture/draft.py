@@ -207,6 +207,24 @@ class DraftManager:
         self._save_draft(updated)
         return updated
 
+    def approve_draft(self, draft_id: str, vault) -> "Note":
+        """Approve a draft: write it to the vault, delete the draft file, return the Note.
+
+        Args:
+            draft_id: The draft to approve.
+            vault: A VaultManager instance to write the note to.
+
+        Returns:
+            The newly created Note on disk.
+        """
+        from cortex.vault.parser import Note  # noqa: F811
+
+        draft = self.get_draft(draft_id)
+        note = vault.create_note(draft)
+        # Remove the draft file now that it's committed to the vault
+        self.reject_draft(draft_id)
+        return note
+
     def reject_draft(self, draft_id: str) -> None:
         """Discard a draft. Deletes the draft file."""
         path = self._drafts_dir / f"{draft_id}.json"

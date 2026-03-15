@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 3.3 — Capture Commands
-**Next task:** Task 3.4 — DraftManager.approve_draft Integration
-**Session:** 5 of 14
+**Last completed task:** Task 3.4 — DraftManager.approve_draft Integration
+**Next task:** Task 4.1 — LexicalIndex Core
+**Session:** 6 of 14
 
 ## Completed Tasks
 
@@ -22,6 +22,7 @@
 - Task 3.1 — NoteDraft & DraftManager ✅
 - Task 3.2 — VaultManager Write Operations ✅
 - Task 3.3 — Capture Commands ✅
+- Task 3.4 — DraftManager.approve_draft Integration ✅
 
 ## Notes & Decisions
 
@@ -125,6 +126,12 @@
 - `create_note` is generic and works with any note type (concept, permanent, project, etc.)
 - Files: `src/cortex/capture/thought.py`, `task.py`, `link.py`, `note.py`, `tests/test_capture/test_commands.py`
 - Tests: 16 new tests, 104 total — all pass
+
+### 2026-03-15 — Task 3.4 ✅
+- Implemented `DraftManager.approve_draft(draft_id, vault)` in `src/cortex/capture/draft.py`
+- Calls `vault.create_note(draft)` to write the .md file, then deletes the draft JSON
+- Files: `src/cortex/capture/draft.py`, `tests/test_capture/test_approve.py`
+- Tests: 4 new tests, 108 total — all pass (approve creates file, approve deletes draft, approve returns valid Note, nonexistent draft raises)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
