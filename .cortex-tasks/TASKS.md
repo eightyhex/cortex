@@ -256,7 +256,7 @@
 ## Session 5: Embedding Pipeline & Vector Store
 
 ### Task 5.1 — Embedding Model Wrapper
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/models.py`
 **Depends on:** Task 1.1
 

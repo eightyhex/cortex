@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 4.2 — IndexManager Skeleton
-**Next task:** Task 5.1 — Embedding Model Wrapper
-**Session:** 7 of 14
+**Last completed task:** Task 5.1 — Embedding Model Wrapper
+**Next task:** Task 5.2 — Semantic Boundary Chunker
+**Session:** 8 of 14
 
 ## Completed Tasks
 
@@ -25,6 +25,7 @@
 - Task 3.4 — DraftManager.approve_draft Integration ✅
 - Task 4.1 — LexicalIndex Core ✅
 - Task 4.2 — IndexManager Skeleton ✅
+- Task 5.1 — Embedding Model Wrapper ✅
 
 ## Notes & Decisions
 
@@ -144,6 +145,15 @@
 - `rebuild_all(notes)` — full rebuild delegation
 - Files: `src/cortex/index/manager.py`, `tests/test_index/test_manager.py`
 - Tests: 4 new tests, 129 total — all pass (index+search, remove, reindex, rebuild_all)
+
+### 2026-03-15 — Task 5.1 ✅
+- Implemented `EmbeddingModel` wrapper in `src/cortex/index/models.py`
+- `__init__(model_name)` with default `nomic-ai/nomic-embed-text-v1.5`, lazy loading (model loaded on first use)
+- `embed(text)` returns 768-dim `list[float]`, `embed_batch(texts)` for batch embedding
+- `tokenize_count(text)` uses model's tokenizer to count tokens
+- Added `einops` dependency required by nomic model
+- Files: `src/cortex/index/models.py`, `tests/test_index/test_models.py`
+- Tests: 7 new tests, 136 total — all pass (lazy loading, single embed, batch embed, empty batch, dimension check, tokenize count, different texts produce different vectors)
 
 ### 2026-03-15 — Task 4.1 ✅
 - Implemented `LexicalIndex` class in `src/cortex/index/lexical.py` with DuckDB-backed full-text search

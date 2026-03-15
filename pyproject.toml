@@ -26,27 +26,23 @@ classifiers = [
 dependencies = [
     # MCP and Claude integration
     "fastmcp>=2.0.0",                              # FastMCP 3.x — decorator-based MCP server
-
     # Vault and markdown
     "python-frontmatter>=1.0.0",                   # YAML frontmatter extraction
     "mistune>=3.0.0",                              # Markdown parsing
     "watchdog>=3.0.0",                             # File system watching
-
     # Indexing and search
     "duckdb>=0.9.0",                               # Full-text search + metadata
     "lancedb>=0.1.0",                              # Vector storage
     "sentence-transformers>=2.2.0",                # Embeddings (nomic-embed-text)
-
     # Knowledge graph
     "networkx>=3.0",                               # Graph algorithms
-
     # Configuration and utilities
     "pydantic-settings>=2.0.0",                    # Typed configuration
     "pydantic>=2.0.0",                             # Data validation
     "python-dateutil>=2.8.0",                      # Date utilities
-
     # Async
     "anyio>=4.0.0",                                # Async I/O compatibility
+    "einops>=0.8.2",
 ]
 
 [project.optional-dependencies]
