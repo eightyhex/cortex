@@ -2,7 +2,6 @@
 
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -45,7 +44,7 @@ def manager(tmp_path):
 
 
 class TestIndexManager:
-    def test_index_and_search(self, manager):
+    def test_index_and_search_lexical(self, manager):
         note = _make_note()
         manager.index_note(note)
 
@@ -53,31 +52,42 @@ class TestIndexManager:
         assert len(results) > 0
         assert results[0].note_id == "note-1"
 
-    def test_remove_note(self, manager):
+    def test_index_and_search_semantic(self, manager):
+        note = _make_note()
+        manager.index_note(note)
+
+        results = manager.semantic.search("machine learning")
+        assert len(results) > 0
+        assert results[0].note_id == "note-1"
+
+    def test_remove_note_from_both(self, manager):
         note = _make_note()
         manager.index_note(note)
         manager.remove_note("note-1")
 
-        results = manager.lexical.search("machine learning")
-        assert len(results) == 0
+        assert len(manager.lexical.search("machine learning")) == 0
+        assert len(manager.semantic.search("machine learning")) == 0
 
-    def test_reindex_note(self, manager):
-        note = _make_note(content="Old content about Redis")
+    def test_reindex_note_updates_both(self, manager):
+        note = _make_note(content="Old content about Redis caching")
         manager.index_note(note)
 
-        updated = _make_note(content="New content about PostgreSQL")
+        updated = _make_note(content="New content about PostgreSQL databases")
         manager.reindex_note(updated)
 
-        # Old content should not match
-        old_results = manager.lexical.search("Redis")
-        assert len(old_results) == 0
+        # Old content gone from lexical
+        assert len(manager.lexical.search("Redis")) == 0
+        # New content in lexical
+        new_lex = manager.lexical.search("PostgreSQL")
+        assert len(new_lex) == 1
+        assert new_lex[0].note_id == "note-1"
 
-        # New content should match
-        new_results = manager.lexical.search("PostgreSQL")
-        assert len(new_results) == 1
-        assert new_results[0].note_id == "note-1"
+        # Semantic also updated — new content should be findable
+        new_sem = manager.semantic.search("PostgreSQL databases")
+        assert len(new_sem) > 0
+        assert new_sem[0].note_id == "note-1"
 
-    def test_rebuild_all(self, manager):
+    def test_rebuild_all_updates_both(self, manager):
         # Add initial note
         manager.index_note(_make_note(note_id="old-1"))
 
@@ -88,11 +98,16 @@ class TestIndexManager:
         ]
         manager.rebuild_all(new_notes)
 
-        # Old note gone
-        old_results = manager.lexical.search("machine learning")
-        assert len(old_results) == 0
+        # Old note gone from lexical
+        assert len(manager.lexical.search("machine learning")) == 0
+        # New notes in lexical
+        assert len(manager.lexical.search("databases")) == 1
 
-        # New notes present
-        db_results = manager.lexical.search("databases")
-        assert len(db_results) == 1
-        assert db_results[0].note_id == "new-1"
+        # Semantic also rebuilt
+        sem_results = manager.semantic.search("databases")
+        assert len(sem_results) > 0
+        assert sem_results[0].note_id == "new-1"
+
+    def test_semantic_property_exposed(self, manager):
+        """IndexManager exposes semantic index via property."""
+        assert manager.semantic is not None

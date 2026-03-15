@@ -309,7 +309,7 @@
 ---
 
 ### Task 5.4 — IndexManager Integration with SemanticIndex
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/manager.py` (extend)
 **Depends on:** Task 5.3, 4.2
 

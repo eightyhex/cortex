@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 5.3 — SemanticIndex (LanceDB)
-**Next task:** Task 5.4 — IndexManager Integration with SemanticIndex
-**Session:** 10 of 14
+**Last completed task:** Task 5.4 — IndexManager Integration with SemanticIndex
+**Next task:** Task 6.1 — Reciprocal Rank Fusion
+**Session:** 11 of 14
 
 ## Completed Tasks
 
@@ -28,6 +28,7 @@
 - Task 5.1 — Embedding Model Wrapper ✅
 - Task 5.2 — Semantic Boundary Chunker ✅
 - Task 5.3 — SemanticIndex (LanceDB) ✅
+- Task 5.4 — IndexManager Integration with SemanticIndex ✅
 
 ## Notes & Decisions
 
@@ -188,6 +189,14 @@
 - LanceDB schema: id, note_id, title, note_type, text, vector (768-dim float32), tags, created
 - Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
 - Tests: 7 new tests, 151 total — all pass (index+search, empty index, remove, rebuild, semantic relevance, upsert on reindex, result fields)
+
+### 2026-03-15 — Task 5.4 ✅
+- Wired `SemanticIndex` into `IndexManager` so both lexical and semantic indexes are updated together
+- `IndexManager.__init__` now initializes both `LexicalIndex` and `SemanticIndex` (with `EmbeddingModel`)
+- All methods (`index_note`, `remove_note`, `reindex_note`, `rebuild_all`) delegate to both indexes
+- Added `semantic` property to expose the `SemanticIndex` instance
+- Files: `src/cortex/index/manager.py`, `tests/test_index/test_manager.py`
+- Tests: 6 tests (up from 4), 153 total — all pass (lexical search, semantic search, remove from both, reindex both, rebuild both, semantic property exposed)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
