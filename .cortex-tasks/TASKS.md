@@ -637,7 +637,7 @@
 ---
 
 ### Task 12.3 — Source Summarization & Staleness Review
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/workflow/summarize.py`, `src/cortex/workflow/staleness_review.py`
 **Depends on:** Task 2.3, 11.3
 

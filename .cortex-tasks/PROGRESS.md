@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 12.2 — Review Generation Workflow
-**Next task:** Task 12.3 — Source Summarization & Staleness Review
-**Session:** 29 of 14
+**Last completed task:** Task 12.3 — Source Summarization & Staleness Review
+**Next task:** Task 13.1 — File Watcher
+**Session:** 30 of 14
 
 ## Completed Tasks
 
@@ -47,6 +47,7 @@
 - Task 11.4 — Lifecycle MCP Tools & Eval Cases ✅
 - Task 12.1 — Inbox Processing Workflow ✅
 - Task 12.2 — Review Generation Workflow ✅
+- Task 12.3 — Source Summarization & Staleness Review ✅
 
 ## Notes & Decisions
 
@@ -397,6 +398,15 @@
 - MCP tool: `mcp_generate_review` in `src/cortex/mcp/server.py` with optional period and target_date params
 - Files: `src/cortex/workflow/review.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_review.py`
 - Tests: 9 new tests, 354 total — all pass (empty vault, weekly period filter, monthly range, counts by type, new captures, completed tasks, active projects, key themes, MCP tool integration)
+
+### 2026-03-15 — Task 12.3 ✅
+- Implemented `summarize_source(note)` in `src/cortex/workflow/summarize.py`
+- Extracts: headings, URLs, word count, content excerpt, source_url, tags, status
+- Implemented `staleness_review(vault, graph, config)` in `src/cortex/workflow/staleness_review.py`
+- Wraps `detect_stale_notes()` with workflow interface, returns sorted StaleCandidate list
+- MCP tools: `mcp_summarize_source` (by note_id), `mcp_staleness_review` (full vault scan with path in output)
+- Files: `src/cortex/workflow/summarize.py`, `src/cortex/workflow/staleness_review.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_summarize.py`, `tests/test_workflow/test_staleness_review.py`
+- Tests: 10 new tests, 364 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

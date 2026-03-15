@@ -26,6 +26,8 @@ from cortex.query.pipeline import QueryPipeline
 from cortex.vault.manager import VaultManager
 from cortex.workflow.inbox import process_inbox as _process_inbox
 from cortex.workflow.review import generate_review as _generate_review
+from cortex.workflow.staleness_review import staleness_review as _staleness_review
+from cortex.workflow.summarize import summarize_source as _summarize_source
 
 # ---------------------------------------------------------------------------
 # Server instance
@@ -594,4 +596,58 @@ def mcp_generate_review(
         "completed_tasks": review.completed_tasks,
         "active_projects": review.active_projects,
         "key_themes": review.key_themes,
+    }
+
+
+@mcp.tool()
+def mcp_summarize_source(note_id: str) -> dict:
+    """Summarize a source note — extract key sections, metadata, and structure.
+
+    Returns structured information (headings, URLs, word count, excerpt) for
+    Claude to produce a human-readable summary. Works best with source notes
+    but accepts any note type.
+    """
+    try:
+        vault = _get_vault()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        note = vault.get_note(note_id)
+    except KeyError:
+        return {"error": f"Note not found: {note_id}"}
+
+    return _summarize_source(note)
+
+
+@mcp.tool()
+def mcp_staleness_review() -> dict:
+    """Run a staleness review — detect stale notes and suggest triage actions.
+
+    Returns notes sorted by staleness score with reasons and suggested actions
+    (archive, categorize, or review). Present results to the user for triage.
+    """
+    try:
+        vault = _get_vault()
+        graph = _get_graph()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    config = _config or CortexConfig()
+    candidates = _staleness_review(vault, graph, config.lifecycle)
+
+    return {
+        "total_stale": len(candidates),
+        "candidates": [
+            {
+                "note_id": c.note.id,
+                "title": c.note.title,
+                "note_type": c.note.note_type,
+                "staleness_score": round(c.staleness_score, 2),
+                "reasons": c.reasons,
+                "suggested_action": c.suggested_action,
+                "path": str(c.note.path),
+            }
+            for c in candidates
+        ],
     }
