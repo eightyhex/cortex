@@ -57,7 +57,7 @@
 ---
 
 ### Task 1.4 — Dockerfile & Docker Compose
-**Status:** `pending`
+**Status:** `done`
 **Files:** `Dockerfile`, `docker-compose.yml`, `docker-compose.gpu.yml`, `scripts/docker-entrypoint.sh`
 **Depends on:** Task 1.1
 

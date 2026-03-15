@@ -37,29 +37,37 @@ fi
 # 2. First-run: scaffold vault structure if empty
 # ---------------------------------------------------------------------------
 if [ ! -d "$VAULT_PATH/00-inbox" ]; then
-    log "No vault structure found — scaffolding from vault.example/ ..."
-    # TODO: implement in Session 1
-    # uv run cortex init-vault --vault-path "$VAULT_PATH"
-    log "(vault scaffolding not yet implemented — see Session 1)"
+    log "No vault structure found — scaffolding..."
+    uv run python -c "
+from pathlib import Path
+from cortex.vault.manager import scaffold_vault
+scaffold_vault(Path('$VAULT_PATH'))
+"
+    log "Vault scaffolded successfully."
 fi
 
 # ---------------------------------------------------------------------------
 # 3. First-run: build indexes if data dir is empty
 # ---------------------------------------------------------------------------
 if [ ! -f "$DATA_PATH/cortex.duckdb" ]; then
-    log "No indexes found — building from vault (this may take a moment)..."
+    log "No indexes found — will build on first use."
     mkdir -p "$DATA_PATH"
-    # TODO: implement in Sessions 4-5
-    # uv run cortex rebuild-index --vault-path "$VAULT_PATH" --data-path "$DATA_PATH"
-    log "(index build not yet implemented — see Sessions 4-5)"
+    # Index rebuild will be triggered by the MCP server on first query
+    # once the indexing modules are implemented (Sessions 4-5)
 fi
 
 # ---------------------------------------------------------------------------
 # 4. Warm up embedding model
 # ---------------------------------------------------------------------------
 log "Warming up embedding model..."
-# TODO: implement in Session 5
-# python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('nomic-ai/nomic-embed-text-v1.5')"
+uv run python -c "
+try:
+    from sentence_transformers import SentenceTransformer
+    SentenceTransformer('nomic-ai/nomic-embed-text-v1.5')
+    print('[cortex-entrypoint] Model loaded successfully.', flush=True)
+except Exception as e:
+    print(f'[cortex-entrypoint] Model warm-up skipped: {e}', flush=True)
+" 2>&1 | head -5 || log "Model warm-up skipped (will load on first use)."
 
 # ---------------------------------------------------------------------------
 # 5. Hand off to CMD

@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 1.3 — Note Templates Module
-**Next task:** Task 1.4 — Dockerfile & Docker Compose
+**Last completed task:** Task 1.4 — Dockerfile & Docker Compose
+**Next task:** Task 1.5 — Justfile Dev Commands
 **Session:** 1 of 14
 
 ## Completed Tasks
@@ -14,6 +14,7 @@
 - Task 1.1 — Pydantic Config Module ✅
 - Task 1.2 — Vault Directory Scaffolding ✅
 - Task 1.3 — Note Templates Module ✅
+- Task 1.4 — Dockerfile & Docker Compose ✅
 
 ## Notes & Decisions
 
@@ -47,6 +48,15 @@
 - Output is valid Obsidian-compatible markdown (YAML frontmatter between `---` delimiters)
 - Files: `src/cortex/vault/templates.py`, `tests/test_vault/test_templates.py`
 - Tests: 12 tests, all pass (one per note type, defaults, invalid type, comprehensive coverage)
+
+### 2026-03-15 — Task 1.4 ✅
+- Multi-stage Dockerfile: deps → model download → runtime (3 stages for lean image + fast rebuilds)
+- docker-compose.yml with vault bind mount (CORTEX_VAULT_PATH env var, default ./vault), named cortex-data volume, stdin_open, healthcheck
+- docker-compose.gpu.yml override with NVIDIA GPU support for accelerated embedding
+- Updated scripts/docker-entrypoint.sh: scaffolds vault if empty (using scaffold_vault), creates data dir, warms embedding model, exec "$@"
+- Updated .dockerignore: removed uv.lock exclusion (needed for --frozen install), kept all other exclusions
+- Files: `Dockerfile`, `docker-compose.yml`, `docker-compose.gpu.yml`, `scripts/docker-entrypoint.sh`, `.dockerignore`
+- Tests: 22 existing tests still pass (no new tests needed — Docker files are config, not code)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

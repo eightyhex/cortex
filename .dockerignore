@@ -47,6 +47,5 @@ CONTRIBUTING.md
 
 # Development
 justfile
-uv.lock
 Makefile
 .pre-commit-config.yaml

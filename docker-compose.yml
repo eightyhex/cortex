@@ -1,0 +1,21 @@
+services:
+  cortex:
+    build: .
+    volumes:
+      - ${CORTEX_VAULT_PATH:-./vault}:/app/vault
+      - cortex-data:/app/data
+    environment:
+      - CORTEX_VAULT_PATH=/app/vault
+      - CORTEX_DATA_PATH=/app/data
+    stdin_open: true     # Required for stdio MCP transport
+    tty: false
+    # No ports exposed — stdio transport only
+    healthcheck:
+      test: ["CMD", "python", "-c", "import cortex"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  cortex-data:           # Named volume for derived data (indexes, graph, drafts)
