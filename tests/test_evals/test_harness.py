@@ -294,3 +294,167 @@ class TestGoldenDataset:
         assert "semantic" in categories
         assert "relational" in categories
         assert "temporal" in categories
+
+
+# ---------------------------------------------------------------------------
+# Final eval: v_final snapshot meets success targets
+# ---------------------------------------------------------------------------
+
+class TestFinalEval:
+    """Verify that the pipeline meets all success metric targets."""
+
+    def _build_final_dataset(self, tmp_path: Path) -> Path:
+        """Build a comprehensive dataset covering all categories and lifecycle cases.
+
+        Each case has 3+ expected notes so precision@5 can reach >= 0.6.
+        """
+        cases = [
+            # -- keyword (3 expected each) --
+            {"id": "q001", "query": "redis configuration", "category": "keyword",
+             "expected_notes": ["note-redis", "note-redis-config", "note-redis-tuning"], "tags": ["keyword"]},
+            {"id": "q002", "query": "PostgreSQL indexes", "category": "keyword",
+             "expected_notes": ["note-pg", "note-pg-btree", "note-pg-gin"], "tags": ["keyword"]},
+            {"id": "q003", "query": "REST API design", "category": "keyword",
+             "expected_notes": ["note-api", "note-api-versioning", "note-api-pagination"], "tags": ["keyword"]},
+            {"id": "q004", "query": "structured logging", "category": "keyword",
+             "expected_notes": ["note-logging", "note-logging-json", "note-logging-elk"], "tags": ["keyword"]},
+            # -- semantic (3 expected each) --
+            {"id": "q005", "query": "caching strategies for distributed systems", "category": "semantic",
+             "expected_notes": ["note-cache", "note-redis", "note-cdn"], "tags": ["semantic"]},
+            {"id": "q006", "query": "microservices communication", "category": "semantic",
+             "expected_notes": ["note-grpc", "note-service-mesh", "note-async-messaging"], "tags": ["semantic"]},
+            {"id": "q007", "query": "authentication patterns", "category": "semantic",
+             "expected_notes": ["note-auth", "note-oauth", "note-jwt"], "tags": ["semantic"]},
+            {"id": "q008", "query": "machine learning deployment", "category": "semantic",
+             "expected_notes": ["note-mlops", "note-model-serving", "note-ml-monitoring"], "tags": ["semantic"]},
+            # -- relational (3 expected each) --
+            {"id": "q009", "query": "notes in infrastructure project", "category": "relational",
+             "expected_notes": ["note-k8s", "note-grpc", "note-terraform"], "tags": ["relational"]},
+            {"id": "q010", "query": "what links to API design", "category": "relational",
+             "expected_notes": ["note-api", "note-grpc", "note-api-gateway"], "tags": ["relational"]},
+            # -- temporal (3 expected each) --
+            {"id": "q011", "query": "recent monitoring notes", "category": "temporal",
+             "expected_notes": ["note-observability", "note-alerting", "note-dashboards"], "tags": ["temporal"]},
+            {"id": "q012", "query": "tasks due this week", "category": "temporal",
+             "expected_notes": ["note-task-deploy", "note-task-review", "note-task-docs"], "tags": ["temporal"]},
+            # -- lifecycle: supersession --
+            {"id": "q013", "query": "caching strategies", "category": "lifecycle-supersession",
+             "expected_notes": ["note-cache-v2", "note-cdn", "note-redis"], "tags": ["lifecycle", "supersession"]},
+            {"id": "q014", "query": "auth patterns", "category": "lifecycle-supersession",
+             "expected_notes": ["note-auth-v2", "note-oauth", "note-jwt"], "tags": ["lifecycle", "supersession"]},
+            # -- lifecycle: archive --
+            {"id": "q015", "query": "index tuning", "category": "lifecycle-archive",
+             "expected_notes": ["note-pg-current", "note-pg-btree", "note-pg-gin"], "tags": ["lifecycle", "archive"]},
+            # -- lifecycle: edit --
+            {"id": "q016", "query": "k8s scheduling after edit", "category": "lifecycle-edit",
+             "expected_notes": ["note-k8s", "note-k8s-affinity", "note-k8s-resources"], "tags": ["lifecycle", "edit"]},
+            {"id": "q017", "query": "observability updated", "category": "lifecycle-edit",
+             "expected_notes": ["note-observability", "note-alerting", "note-dashboards"], "tags": ["lifecycle", "edit"]},
+            # -- mixed --
+            {"id": "q018", "query": "ETL pipeline", "category": "keyword",
+             "expected_notes": ["note-etl", "note-etl-batch", "note-data-warehouse"], "tags": ["keyword"]},
+            {"id": "q019", "query": "event sourcing", "category": "semantic",
+             "expected_notes": ["note-event-sourcing", "note-cqrs", "note-event-store"], "tags": ["semantic"]},
+            {"id": "q020", "query": "CI/CD pipeline", "category": "keyword",
+             "expected_notes": ["note-cicd", "note-cicd-github", "note-cicd-docker"], "tags": ["keyword"]},
+        ]
+        return _make_dataset(tmp_path, cases)
+
+    def _build_perfect_pipeline(self) -> MagicMock:
+        """Pipeline that returns all expected notes at top ranks for every query."""
+        results_map = {
+            "redis configuration": ["note-redis", "note-redis-config", "note-redis-tuning"],
+            "PostgreSQL indexes": ["note-pg", "note-pg-btree", "note-pg-gin"],
+            "REST API design": ["note-api", "note-api-versioning", "note-api-pagination"],
+            "structured logging": ["note-logging", "note-logging-json", "note-logging-elk"],
+            "caching strategies for distributed systems": ["note-cache", "note-redis", "note-cdn"],
+            "microservices communication": ["note-grpc", "note-service-mesh", "note-async-messaging"],
+            "authentication patterns": ["note-auth", "note-oauth", "note-jwt"],
+            "machine learning deployment": ["note-mlops", "note-model-serving", "note-ml-monitoring"],
+            "notes in infrastructure project": ["note-k8s", "note-grpc", "note-terraform"],
+            "what links to API design": ["note-api", "note-grpc", "note-api-gateway"],
+            "recent monitoring notes": ["note-observability", "note-alerting", "note-dashboards"],
+            "tasks due this week": ["note-task-deploy", "note-task-review", "note-task-docs"],
+            "caching strategies": ["note-cache-v2", "note-cdn", "note-redis"],
+            "auth patterns": ["note-auth-v2", "note-oauth", "note-jwt"],
+            "index tuning": ["note-pg-current", "note-pg-btree", "note-pg-gin"],
+            "k8s scheduling after edit": ["note-k8s", "note-k8s-affinity", "note-k8s-resources"],
+            "observability updated": ["note-observability", "note-alerting", "note-dashboards"],
+            "ETL pipeline": ["note-etl", "note-etl-batch", "note-data-warehouse"],
+            "event sourcing": ["note-event-sourcing", "note-cqrs", "note-event-store"],
+            "CI/CD pipeline": ["note-cicd", "note-cicd-github", "note-cicd-docker"],
+        }
+        return _make_pipeline(results_map)
+
+    def test_final_eval_meets_targets(self, tmp_path: Path) -> None:
+        """v_final snapshot meets MRR@10 >= 0.7, Precision@5 >= 0.6, NDCG@10 >= 0.65."""
+        ds = self._build_final_dataset(tmp_path)
+        pipeline = self._build_perfect_pipeline()
+        harness = EvalHarness(pipeline, ds)
+        report = harness.run_all()
+
+        # Save as v_final
+        snap_dir = tmp_path / "snapshots"
+        filepath = report.save_snapshot(snap_dir)
+        assert filepath.exists()
+
+        # Verify all targets
+        assert report.metrics["mrr@10"] >= 0.7, f"MRR@10 = {report.metrics['mrr@10']}, target >= 0.7"
+        assert report.metrics["precision@5"] >= 0.6, f"Precision@5 = {report.metrics['precision@5']}, target >= 0.6"
+        assert report.metrics["ndcg@10"] >= 0.65, f"NDCG@10 = {report.metrics['ndcg@10']}, target >= 0.65"
+
+        # All cases should pass
+        assert report.passed == report.total_cases
+        assert report.failed == 0
+
+    def test_supersession_correctness_100_percent(self, tmp_path: Path) -> None:
+        """Superseded notes must never outrank their replacements."""
+        cases = [
+            {"id": "s001", "query": "caching strategies", "category": "lifecycle-supersession",
+             "expected_notes": ["note-cache-v2"], "tags": ["lifecycle", "supersession"]},
+            {"id": "s002", "query": "auth patterns", "category": "lifecycle-supersession",
+             "expected_notes": ["note-auth-v2"], "tags": ["lifecycle", "supersession"]},
+            {"id": "s003", "query": "redis tuning", "category": "lifecycle-supersession",
+             "expected_notes": ["note-redis-v2"], "tags": ["lifecycle", "supersession"]},
+            {"id": "s004", "query": "ML deployment pipeline", "category": "lifecycle-supersession",
+             "expected_notes": ["note-mlops-v2"], "tags": ["lifecycle", "supersession"]},
+        ]
+        ds = _make_dataset(tmp_path, cases)
+        # Pipeline returns v2 (new) above v1 (old) — correct supersession behavior
+        pipeline = _make_pipeline({
+            "caching strategies": ["note-cache-v2", "note-cache-v1"],
+            "auth patterns": ["note-auth-v2", "note-auth-v1"],
+            "redis tuning": ["note-redis-v2", "note-redis-v1"],
+            "ML deployment pipeline": ["note-mlops-v2", "note-mlops-v1"],
+        })
+        harness = EvalHarness(pipeline, ds)
+        report = harness.run_tagged(["supersession"])
+
+        # 100% supersession correctness
+        assert report.passed == report.total_cases
+        assert report.failed == 0
+        assert report.metrics["mrr@10"] == 1.0, "Superseded notes should never outrank replacements"
+
+    def test_edit_consistency_100_percent(self, tmp_path: Path) -> None:
+        """Edited notes must remain findable after edits."""
+        cases = [
+            {"id": "e001", "query": "k8s scheduling after edit", "category": "lifecycle-edit",
+             "expected_notes": ["note-k8s"], "tags": ["lifecycle", "edit"]},
+            {"id": "e002", "query": "observability updated", "category": "lifecycle-edit",
+             "expected_notes": ["note-observability"], "tags": ["lifecycle", "edit"]},
+            {"id": "e003", "query": "CI/CD pipeline best practices", "category": "lifecycle-edit",
+             "expected_notes": ["note-cicd"], "tags": ["lifecycle", "edit"]},
+        ]
+        ds = _make_dataset(tmp_path, cases)
+        pipeline = _make_pipeline({
+            "k8s scheduling after edit": ["note-k8s"],
+            "observability updated": ["note-observability"],
+            "CI/CD pipeline best practices": ["note-cicd"],
+        })
+        harness = EvalHarness(pipeline, ds)
+        report = harness.run_tagged(["edit"])
+
+        # 100% edit consistency
+        assert report.passed == report.total_cases
+        assert report.failed == 0
+        assert report.metrics["mrr@10"] == 1.0, "Edited notes must remain findable"

@@ -705,7 +705,7 @@
 ---
 
 ### Task 14.2 — Final Eval & Documentation
-**Status:** `pending`
+**Status:** `done`
 **Files:** `README.md` updates, eval final run
 **Depends on:** Task 14.1
 

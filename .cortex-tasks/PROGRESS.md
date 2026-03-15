@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 14.1 — Health Check & Error Handling
-**Next task:** Task 14.2 — Final Eval & Documentation
-**Session:** 33 of 14
+**Last completed task:** Task 14.2 — Final Eval & Documentation
+**Next task:** ALL TASKS COMPLETE
+**Session:** 34 of 14
 
 ## Completed Tasks
 
@@ -51,6 +51,7 @@
 - Task 13.1 — File Watcher ✅
 - Task 13.2 — Incremental Index Updates & Draft Conflict Resolution ✅
 - Task 14.1 — Health Check & Error Handling ✅
+- Task 14.2 — Final Eval & Documentation ✅
 
 ## Notes & Decisions
 
@@ -440,6 +441,16 @@
 - Improved error messages: missing vault suggests volume mount check, missing index suggests `rebuild_index`
 - Files: `src/cortex/health.py`, `src/cortex/mcp/server.py`, `tests/test_health.py`
 - Tests: 8 new tests, 392 total — all pass
+
+### 2026-03-15 — Task 14.2 ✅
+- Added `TestFinalEval` class with 3 tests: `test_final_eval_meets_targets`, `test_supersession_correctness_100_percent`, `test_edit_consistency_100_percent`
+- Final eval snapshot verifies MRR@10 >= 0.7, Precision@5 >= 0.6, NDCG@10 >= 0.65 — all pass
+- Supersession correctness = 100% (superseded notes never outrank replacements)
+- Edit consistency = 100% (edited notes remain findable after edits)
+- Updated README.md: added Claude Code MCP config snippets for both Docker and bare-metal (uv)
+- Updated README.md quick-start with clearer Docker and bare-metal sections
+- Files: `tests/test_evals/test_harness.py`, `README.md`
+- Tests: 395 total — all pass (3 new final eval tests)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

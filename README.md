@@ -8,7 +8,7 @@ Cortex transforms your Obsidian vault into a queryable, intelligent knowledge ba
 
 **Key idea:** Your vault is the single source of truth. Claude queries it via MCP tools. Three search systems (lexical, semantic, graph-based) work together to find what matters. Full lifecycle management: create, edit, archive, supersede.
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Docker (Recommended)
 
@@ -21,26 +21,63 @@ cp settings.example.yaml settings.yaml
 # Edit settings.yaml: set vault.path to your Obsidian vault
 
 # 2. Start the server
-docker compose up
+CORTEX_VAULT_PATH=~/Documents/my-vault docker compose up -d
 ```
 
-Then configure Claude Code's MCP settings (see `docs/02-ARCHITECTURE.md § 6a` for the config snippet).
-
-### Local Development
+### Bare-Metal (no Docker)
 
 ```bash
-# Install dependencies
+git clone https://github.com/your-org/cortex.git
+cd cortex
+
+# 1. Install dependencies (requires Python 3.11+ and uv)
 uv sync
 
-# Configure your vault
+# 2. Configure your vault
 cp settings.example.yaml settings.yaml
+# Edit settings.yaml: set vault.path to your Obsidian vault
 
-# Build indexes
-uv run cortex-rebuild
-
-# Start MCP server
-uv run cortex
+# 3. Start MCP server
+uv run python -m cortex.main
 ```
+
+### Configure Claude Code
+
+Add the following to your Claude Code MCP settings (`~/.claude/settings.json` or project `.mcp.json`):
+
+**Docker:**
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "docker",
+      "args": ["compose", "-f", "/path/to/cortex/docker-compose.yml", "run", "--rm", "-i", "cortex"],
+      "env": {
+        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
+      }
+    }
+  }
+}
+```
+
+**Bare-metal (uv):**
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/cortex", "python", "-m", "cortex.main"],
+      "env": {
+        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
+      }
+    }
+  }
+}
+```
+
+After configuring, restart Claude Code. The Cortex tools (`capture_thought`, `search_vault`, `add_task`, etc.) will appear automatically.
 
 ### Setting Up Your Vault
 
@@ -221,4 +258,4 @@ No HTTP server overhead. Claude Code spawns the MCP process directly. Simpler ar
 
 ---
 
-**Last updated:** 2026-03-14 | **Version:** 0.3 | **Status:** Design phase complete, ready for Session 1
+**Last updated:** 2026-03-15 | **Version:** 1.0 | **Status:** Complete
