@@ -434,7 +434,7 @@
 ---
 
 ### Task 8.2 — Graph Queries
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/graph/queries.py`
 **Depends on:** Task 8.1
 

@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 8.1 — GraphManager & Graph Builder
-**Next task:** Task 8.2 — Graph Queries
-**Session:** 17 of 14
+**Last completed task:** Task 8.2 — Graph Queries
+**Next task:** Task 8.3 — Graph Integration into QueryPipeline
+**Session:** 18 of 14
 
 ## Completed Tasks
 
@@ -35,6 +35,7 @@
 - Task 7.1 — MCP Server Setup & Capture Tools ✅
 - Task 7.2 — MCP Search & Admin Tools ✅
 - Task 8.1 — GraphManager & Graph Builder ✅
+- Task 8.2 — Graph Queries ✅
 
 ## Notes & Decisions
 
@@ -252,6 +253,16 @@
 - Error handling: clear messages for missing index, vault not found, note not found
 - Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
 - Tests: 20 new tests, 211 total — all pass
+
+### 2026-03-15 — Task 8.2 ✅
+- Implemented graph query functions in `src/cortex/graph/queries.py`
+- `get_neighbors(graph, note_id, depth)` — BFS neighbors via undirected view
+- `find_path(graph, source_id, target_id)` — shortest path via undirected view
+- `get_cluster(graph, note_id, max_nodes)` — ego graph with expanding radius
+- `get_project_notes(graph, project_id)` — notes linked via BELONGS_TO_PROJECT edges
+- `graph_search(graph, note_ids, depth)` — expands seed IDs, returns SearchResults with score decay by hop distance, skips project nodes
+- Files: `src/cortex/graph/queries.py`, `tests/test_graph/test_queries.py`
+- Tests: 18 new tests, 241 total — all pass
 
 ### 2026-03-15 — Task 8.1 ✅
 - Implemented `GraphManager` in `src/cortex/graph/manager.py` and graph building helpers in `src/cortex/graph/builder.py`
