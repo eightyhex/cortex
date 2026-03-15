@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 12.1 — Inbox Processing Workflow
-**Next task:** Task 12.2 — Review Generation Workflow
-**Session:** 28 of 14
+**Last completed task:** Task 12.2 — Review Generation Workflow
+**Next task:** Task 12.3 — Source Summarization & Staleness Review
+**Session:** 29 of 14
 
 ## Completed Tasks
 
@@ -46,6 +46,7 @@
 - Task 11.3 — Staleness Detection ✅
 - Task 11.4 — Lifecycle MCP Tools & Eval Cases ✅
 - Task 12.1 — Inbox Processing Workflow ✅
+- Task 12.2 — Review Generation Workflow ✅
 
 ## Notes & Decisions
 
@@ -386,6 +387,16 @@
 - MCP tool: `mcp_process_inbox` in `src/cortex/mcp/server.py` returns formatted items for Claude to present
 - Files: `src/cortex/workflow/inbox.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_inbox.py`
 - Tests: 10 new tests, 345 total — all pass (empty inbox, list notes, ignore non-inbox, summary, URL suggestion, TODO suggestion, age calculation, sort order, tag suggestions, MCP tool integration)
+
+### 2026-03-15 — Task 12.2 ✅
+- Implemented `generate_review(vault, period, target_date)` in `src/cortex/workflow/review.py`
+- `ReviewDraft` dataclass with: period, start/end dates, total_notes, counts_by_type, new_captures, completed_tasks, active_projects, key_themes
+- Weekly period = 7 days lookback, monthly = 30 days
+- New captures: inbox/thought notes in period; completed tasks: task notes with status=done; active projects: all active project notes from full vault
+- Key themes extracted from tag frequency across period notes
+- MCP tool: `mcp_generate_review` in `src/cortex/mcp/server.py` with optional period and target_date params
+- Files: `src/cortex/workflow/review.py`, `src/cortex/mcp/server.py`, `tests/test_workflow/test_review.py`
+- Tests: 9 new tests, 354 total — all pass (empty vault, weekly period filter, monthly range, counts by type, new captures, completed tasks, active projects, key themes, MCP tool integration)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

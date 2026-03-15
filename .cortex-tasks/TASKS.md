@@ -622,7 +622,7 @@
 ---
 
 ### Task 12.2 — Review Generation Workflow
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/workflow/review.py`
 **Depends on:** Task 2.3, 6.3
 

@@ -25,6 +25,7 @@ from cortex.lifecycle.staleness import detect_stale_notes
 from cortex.query.pipeline import QueryPipeline
 from cortex.vault.manager import VaultManager
 from cortex.workflow.inbox import process_inbox as _process_inbox
+from cortex.workflow.review import generate_review as _generate_review
 
 # ---------------------------------------------------------------------------
 # Server instance
@@ -556,4 +557,41 @@ def mcp_process_inbox() -> dict:
             }
             for item in items
         ],
+    }
+
+
+@mcp.tool()
+def mcp_generate_review(
+    period: str = "weekly",
+    target_date: str | None = None,
+) -> dict:
+    """Generate a weekly or monthly review summary of vault activity.
+
+    Aggregates note counts by type, new captures, completed tasks, active
+    projects, and key themes. Present the results to the user as a structured
+    review.
+    """
+    from datetime import date as date_cls
+
+    try:
+        vault = _get_vault()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    td = None
+    if target_date:
+        td = date_cls.fromisoformat(target_date)
+
+    review = _generate_review(vault, period=period, target_date=td)
+
+    return {
+        "period": review.period,
+        "start_date": review.start_date.isoformat(),
+        "end_date": review.end_date.isoformat(),
+        "total_notes": review.total_notes,
+        "counts_by_type": review.counts_by_type,
+        "new_captures": review.new_captures,
+        "completed_tasks": review.completed_tasks,
+        "active_projects": review.active_projects,
+        "key_themes": review.key_themes,
     }
