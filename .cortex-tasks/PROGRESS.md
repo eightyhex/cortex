@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 6.2 — Context Assembler
-**Next task:** Task 6.3 — QueryPipeline
-**Session:** 13 of 14
+**Last completed task:** Task 6.3 — QueryPipeline
+**Next task:** Task 7.1 — MCP Server Setup & Capture Tools
+**Session:** 14 of 14
 
 ## Completed Tasks
 
@@ -31,6 +31,7 @@
 - Task 5.4 — IndexManager Integration with SemanticIndex ✅
 - Task 6.1 — Reciprocal Rank Fusion ✅
 - Task 6.2 — Context Assembler ✅
+- Task 6.3 — QueryPipeline ✅
 
 ## Notes & Decisions
 
@@ -218,6 +219,16 @@
 - Accepts optional `notes: dict[str, Note]` for metadata lookup (tags, links, created, supersession)
 - Files: `src/cortex/query/context.py`, `tests/test_query/test_context.py`
 - Tests: 6 new tests, 167 total — all pass (basic assembly, empty results, truncation, superseded annotation, no-notes fallback, budget exhaustion)
+
+### 2026-03-15 — Task 6.3 ✅
+- Implemented `QueryPipeline` class in `src/cortex/query/pipeline.py`
+- `async execute(query, limit)` runs lexical and semantic search in parallel via asyncio, fuses via RRF, assembles context
+- `QueryResult` dataclass: `query`, `results: list[RankedResult]`, `context: str`, `explanation: str`
+- `RankedResult` dataclass: `note_id`, `title`, `score`, `matched_by: list[str]`, `snippet`, `note_type`
+- Status-based score multipliers applied after fusion: active=1.0, draft=0.8, archived=0.3, superseded=0.2
+- Graceful error handling for empty indexes (no FTS index, empty vector store)
+- Files: `src/cortex/query/pipeline.py`, `tests/test_query/test_pipeline.py`
+- Tests: 6 new tests, 173 total — all pass (end-to-end query, status multipliers, explanation includes source systems, empty results, limit respected, ranked result fields)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

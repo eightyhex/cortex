@@ -360,7 +360,7 @@
 ---
 
 ### Task 6.3 — QueryPipeline
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/pipeline.py`
 **Depends on:** Task 6.1, 6.2, 4.1, 5.3
 
