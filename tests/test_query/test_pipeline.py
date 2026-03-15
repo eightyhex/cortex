@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 
 from cortex.config import CortexConfig
+from cortex.graph.manager import GraphManager
 from cortex.index.lexical import LexicalIndex
 from cortex.index.models import EmbeddingModel
 from cortex.index.semantic import SemanticIndex
 from cortex.query.pipeline import QueryPipeline, STATUS_MULTIPLIERS
-from cortex.vault.parser import Note
+from cortex.vault.parser import Link, Note
 
 
 def _make_note(
@@ -182,3 +183,61 @@ class TestQueryPipeline:
             assert r.score > 0
             assert isinstance(r.matched_by, list)
             assert len(r.matched_by) > 0
+
+    def test_graph_integration(self, tmp_indexes, tmp_path):
+        """Graph search contributes neighbors to fused results."""
+        lexical, semantic = tmp_indexes
+
+        # Note A (indexed) links to Note B (not indexed in lexical/semantic)
+        note_a = _make_note(
+            "note-a",
+            "Neural Networks Overview",
+            "Neural networks are computational models inspired by the brain.",
+            tags=["ml"],
+        )
+        note_a = Note(
+            id=note_a.id,
+            title=note_a.title,
+            note_type=note_a.note_type,
+            path=note_a.path,
+            content=note_a.content,
+            frontmatter=note_a.frontmatter,
+            created=note_a.created,
+            modified=note_a.modified,
+            tags=note_a.tags,
+            links=[
+                Link(source_id="note-a", target_id="note-b", target_title="Deep Learning", link_type="wikilink"),
+            ],
+            status=note_a.status,
+        )
+        note_b = _make_note(
+            "note-b",
+            "Deep Learning",
+            "Deep learning uses multiple layers of neural networks.",
+            tags=["ml"],
+        )
+
+        # Only index note_a in lexical/semantic — note_b is only reachable via graph
+        lexical.index_note(note_a)
+        semantic.index_note(note_a)
+
+        # Build graph with both notes
+        graph_manager = GraphManager(tmp_path / "graph.graphml")
+        graph_manager.build_from_vault([note_a, note_b])
+
+        pipeline = QueryPipeline(lexical, semantic, graph=graph_manager)
+        result = asyncio.run(pipeline.execute("neural networks", limit=10))
+
+        # note_a should appear (from lexical/semantic)
+        result_ids = [r.note_id for r in result.results]
+        assert "note-a" in result_ids
+
+        # note_b should appear via graph expansion
+        assert "note-b" in result_ids
+
+        # Explanation should mention graph
+        assert "graph" in result.explanation
+
+        # note_b should have "graph" in matched_by
+        note_b_result = next(r for r in result.results if r.note_id == "note-b")
+        assert "graph" in note_b_result.matched_by

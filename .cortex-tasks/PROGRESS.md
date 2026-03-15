@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 8.2 — Graph Queries
-**Next task:** Task 8.3 — Graph Integration into QueryPipeline
-**Session:** 18 of 14
+**Last completed task:** Task 8.3 — Graph Integration into QueryPipeline
+**Next task:** Task 9.1 — Eval Metrics
+**Session:** 19 of 14
 
 ## Completed Tasks
 
@@ -36,6 +36,7 @@
 - Task 7.2 — MCP Search & Admin Tools ✅
 - Task 8.1 — GraphManager & Graph Builder ✅
 - Task 8.2 — Graph Queries ✅
+- Task 8.3 — Graph Integration into QueryPipeline ✅
 
 ## Notes & Decisions
 
@@ -263,6 +264,15 @@
 - `graph_search(graph, note_ids, depth)` — expands seed IDs, returns SearchResults with score decay by hop distance, skips project nodes
 - Files: `src/cortex/graph/queries.py`, `tests/test_graph/test_queries.py`
 - Tests: 18 new tests, 241 total — all pass
+
+### 2026-03-15 — Task 8.3 ✅
+- Wired `GraphManager` into `QueryPipeline` as optional third search source
+- `execute()` collects top-N note IDs from lexical+semantic as seeds, calls `graph_search()` with depth=1
+- Graph results included in RRF fusion alongside lexical and semantic
+- `explanation` field includes "graph" when graph contributes results
+- Added `_safe_graph_search()` with graceful error handling
+- Files: `src/cortex/query/pipeline.py`, `tests/test_query/test_pipeline.py`
+- Tests: 1 new test (graph_integration), 242 total — all pass
 
 ### 2026-03-15 — Task 8.1 ✅
 - Implemented `GraphManager` in `src/cortex/graph/manager.py` and graph building helpers in `src/cortex/graph/builder.py`

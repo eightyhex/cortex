@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from cortex.index.lexical import LexicalIndex, SearchResult
 from cortex.index.semantic import SemanticIndex
 from cortex.query.context import ContextAssembler
 from cortex.query.fusion import FusedResult, reciprocal_rank_fusion
+
+if TYPE_CHECKING:
+    from cortex.graph.manager import GraphManager
 
 
 # Status-based score multipliers applied after fusion
@@ -49,7 +53,7 @@ class QueryPipeline:
         self,
         lexical: LexicalIndex,
         semantic: SemanticIndex,
-        graph=None,
+        graph: GraphManager | None = None,
     ) -> None:
         self._lexical = lexical
         self._semantic = semantic
@@ -82,6 +86,19 @@ class QueryPipeline:
         # Collect result lists and labels
         result_lists: list[list[SearchResult]] = [lexical_results, semantic_results]
         labels = ["lexical", "semantic"]
+
+        # Graph expansion: use top-N note IDs from lexical+semantic as seeds
+        if self._graph is not None:
+            seed_ids = list(
+                dict.fromkeys(
+                    r.note_id
+                    for r in (lexical_results + semantic_results)
+                )
+            )
+            graph_results = self._safe_graph_search(seed_ids, depth=1)
+            if graph_results:
+                result_lists.append(graph_results)
+                labels.append("graph")
 
         # Fuse via RRF
         fused = reciprocal_rank_fusion(result_lists, labels=labels)
@@ -138,6 +155,15 @@ class QueryPipeline:
         """Semantic search with graceful error handling."""
         try:
             return self._semantic.search(query, limit)
+        except Exception:
+            return []
+
+    def _safe_graph_search(self, seed_ids: list[str], depth: int) -> list[SearchResult]:
+        """Graph search with graceful error handling."""
+        try:
+            from cortex.graph.queries import graph_search
+
+            return graph_search(self._graph.graph, seed_ids, depth=depth)
         except Exception:
             return []
 

@@ -451,7 +451,7 @@
 ---
 
 ### Task 8.3 — Graph Integration into QueryPipeline
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/pipeline.py` (extend)
 **Depends on:** Task 8.2, 6.3
 
