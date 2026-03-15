@@ -176,6 +176,102 @@
       "category": "semantic",
       "expected_notes": ["note-data-warehouse"],
       "tags": ["retrieval", "semantic"]
+    },
+    {
+      "id": "q026",
+      "query": "caching strategies for distributed systems",
+      "category": "lifecycle-supersession",
+      "expected_notes": ["note-memcached-v2"],
+      "unexpected_notes": ["note-memcached-strategy"],
+      "tags": ["lifecycle", "supersession"],
+      "setup": "note-memcached-strategy is superseded by note-memcached-v2"
+    },
+    {
+      "id": "q027",
+      "query": "redis configuration and tuning",
+      "category": "lifecycle-supersession",
+      "expected_notes": ["note-redis-v2"],
+      "unexpected_notes": ["note-redis-patterns"],
+      "tags": ["lifecycle", "supersession"],
+      "setup": "note-redis-patterns is superseded by note-redis-v2"
+    },
+    {
+      "id": "q028",
+      "query": "PostgreSQL index optimization techniques",
+      "category": "lifecycle-archive",
+      "expected_notes": ["note-pg-indexes-current"],
+      "unexpected_notes": ["note-pg-indexes-archived"],
+      "tags": ["lifecycle", "archive"],
+      "setup": "note-pg-indexes-archived is archived, note-pg-indexes-current is active"
+    },
+    {
+      "id": "q029",
+      "query": "API design best practices",
+      "category": "lifecycle-archive",
+      "expected_notes": ["note-api-design"],
+      "unexpected_notes": ["note-api-design-old"],
+      "tags": ["lifecycle", "archive"],
+      "setup": "note-api-design-old is archived"
+    },
+    {
+      "id": "q030",
+      "query": "authentication patterns and OAuth",
+      "category": "lifecycle-supersession",
+      "expected_notes": ["note-auth-v2"],
+      "unexpected_notes": ["note-auth-patterns"],
+      "tags": ["lifecycle", "supersession"],
+      "setup": "note-auth-patterns superseded by note-auth-v2"
+    },
+    {
+      "id": "q031",
+      "query": "kubernetes scheduling after edit",
+      "category": "lifecycle-edit",
+      "expected_notes": ["note-k8s-scheduling"],
+      "tags": ["lifecycle", "edit"],
+      "setup": "note-k8s-scheduling was edited to add new content"
+    },
+    {
+      "id": "q032",
+      "query": "monitoring and observability setup",
+      "category": "lifecycle-edit",
+      "expected_notes": ["note-observability"],
+      "tags": ["lifecycle", "edit"],
+      "setup": "note-observability was edited with updated content"
+    },
+    {
+      "id": "q033",
+      "query": "ETL pipeline strategies",
+      "category": "lifecycle-archive",
+      "expected_notes": ["note-etl-patterns"],
+      "unexpected_notes": ["note-etl-deprecated"],
+      "tags": ["lifecycle", "archive"],
+      "setup": "note-etl-deprecated is archived"
+    },
+    {
+      "id": "q034",
+      "query": "machine learning deployment",
+      "category": "lifecycle-supersession",
+      "expected_notes": ["note-ml-ops-v2"],
+      "unexpected_notes": ["note-ml-ops"],
+      "tags": ["lifecycle", "supersession"],
+      "setup": "note-ml-ops superseded by note-ml-ops-v2"
+    },
+    {
+      "id": "q035",
+      "query": "CI/CD pipeline best practices",
+      "category": "lifecycle-edit",
+      "expected_notes": ["note-ci-cd-setup"],
+      "tags": ["lifecycle", "edit"],
+      "setup": "note-ci-cd-setup was edited to update pipeline config"
+    },
+    {
+      "id": "q036",
+      "query": "event sourcing architecture",
+      "category": "lifecycle-archive",
+      "expected_notes": ["note-event-sourcing"],
+      "unexpected_notes": ["note-event-sourcing-draft"],
+      "tags": ["lifecycle", "archive"],
+      "setup": "note-event-sourcing-draft is archived"
     }
   ]
 }

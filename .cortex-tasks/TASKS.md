@@ -590,7 +590,7 @@
 ---
 
 ### Task 11.4 — Lifecycle MCP Tools & Eval Cases
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/mcp/server.py` (extend), `evals/golden_dataset.json` (extend)
 **Depends on:** Task 11.1, 11.2, 11.3, 7.1
 

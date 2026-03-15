@@ -18,7 +18,10 @@ from cortex.capture.note import create_note as create_note_cmd
 from cortex.capture.task import add_task
 from cortex.capture.thought import capture_thought
 from cortex.config import CortexConfig
+from cortex.graph.manager import GraphManager
 from cortex.index.manager import IndexManager
+from cortex.lifecycle.manager import LifecycleManager
+from cortex.lifecycle.staleness import detect_stale_notes
 from cortex.query.pipeline import QueryPipeline
 from cortex.vault.manager import VaultManager
 
@@ -36,6 +39,8 @@ _config: CortexConfig | None = None
 _vault: VaultManager | None = None
 _drafts: DraftManager | None = None
 _index: IndexManager | None = None
+_graph: GraphManager | None = None
+_lifecycle: LifecycleManager | None = None
 _last_rebuild: datetime | None = None
 
 
@@ -44,17 +49,25 @@ def init_server(
     vault: VaultManager | None = None,
     drafts: DraftManager | None = None,
     index: IndexManager | None = None,
+    graph: GraphManager | None = None,
 ) -> FastMCP:
     """Initialize global state and return the MCP server instance.
 
     If arguments are None, defaults are constructed from CortexConfig().
     """
-    global _config, _vault, _drafts, _index  # noqa: PLW0603
+    global _config, _vault, _drafts, _index, _graph, _lifecycle  # noqa: PLW0603
 
     _config = config or CortexConfig()
     _vault = vault or VaultManager(_config.vault.path, _config)
     _drafts = drafts or DraftManager(_config.draft.drafts_dir)
     _index = index
+    _graph = graph
+
+    # Initialize lifecycle manager if all dependencies are available
+    if _index is not None and _graph is not None:
+        _lifecycle = LifecycleManager(_vault, _index, _graph, _drafts)
+    else:
+        _lifecycle = None
 
     return mcp
 
@@ -75,6 +88,20 @@ def _get_index() -> IndexManager:
     if _index is None:
         raise RuntimeError("Index not initialized — call init_server(index=...) first")
     return _index
+
+
+def _get_lifecycle() -> LifecycleManager:
+    if _lifecycle is None:
+        raise RuntimeError(
+            "Lifecycle not initialized — call init_server(index=..., graph=...) first"
+        )
+    return _lifecycle
+
+
+def _get_graph() -> GraphManager:
+    if _graph is None:
+        raise RuntimeError("Graph not initialized — call init_server(graph=...) first")
+    return _graph
 
 
 def _draft_response(draft) -> dict:
@@ -340,4 +367,155 @@ def vault_stats() -> dict:
         "by_type": type_counts,
         "index": index_info,
         "last_rebuild": _last_rebuild.isoformat() if _last_rebuild else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def edit_note(note_id: str, changes: dict) -> dict:
+    """Start an edit on an existing note with a review draft.
+
+    Changes can include: title, content, tags, and arbitrary frontmatter fields.
+    Returns a draft with a diff preview — show the preview to the user and ask
+    for approval before calling approve_edit.
+    """
+    try:
+        lm = _get_lifecycle()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        draft = lm.start_edit(note_id, changes)
+    except KeyError:
+        return {"error": f"Note not found: {note_id}"}
+
+    diff = draft.frontmatter.get("_diff", "")
+    return {
+        "draft_id": draft.draft_id,
+        "preview": draft.render_preview(),
+        "diff": diff,
+        "note_id": note_id,
+    }
+
+
+@mcp.tool()
+def approve_edit(draft_id: str) -> dict:
+    """Approve an edit draft and commit changes to the vault.
+
+    Only call this after showing the diff to the user and receiving approval.
+    """
+    try:
+        lm = _get_lifecycle()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        note = lm.commit_edit(draft_id)
+    except (ValueError, KeyError) as e:
+        return {"error": str(e)}
+
+    return {
+        "note_id": note.id,
+        "title": note.title,
+        "path": str(note.path),
+        "status": "committed",
+    }
+
+
+@mcp.tool()
+def archive_note(note_id: str) -> dict:
+    """Archive a note — sets status to archived and deprioritizes in search."""
+    try:
+        lm = _get_lifecycle()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        note = lm.archive_note(note_id)
+    except KeyError:
+        return {"error": f"Note not found: {note_id}"}
+
+    return {
+        "note_id": note.id,
+        "title": note.title,
+        "status": "archived",
+    }
+
+
+@mcp.tool()
+def unarchive_note(note_id: str) -> dict:
+    """Restore an archived note back to active status."""
+    try:
+        lm = _get_lifecycle()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        note = lm.unarchive_note(note_id)
+    except KeyError:
+        return {"error": f"Note not found: {note_id}"}
+
+    return {
+        "note_id": note.id,
+        "title": note.title,
+        "status": "active",
+    }
+
+
+@mcp.tool()
+def supersede_note(old_note_id: str, new_note_id: str) -> dict:
+    """Mark a note as superseded by a newer note.
+
+    Creates bidirectional links and deprioritizes the old note in search.
+    """
+    try:
+        lm = _get_lifecycle()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    try:
+        old_note, new_note = lm.supersede_note(old_note_id, new_note_id)
+    except KeyError as e:
+        return {"error": f"Note not found: {e}"}
+
+    return {
+        "old_note_id": old_note.id,
+        "old_status": "superseded",
+        "new_note_id": new_note.id,
+        "superseded_by": new_note_id,
+    }
+
+
+@mcp.tool()
+def detect_stale() -> dict:
+    """Detect stale notes that may need review, archival, or categorization.
+
+    Returns notes sorted by staleness score with suggested actions.
+    """
+    try:
+        vault = _get_vault()
+        graph = _get_graph()
+    except RuntimeError as e:
+        return {"error": str(e)}
+
+    config = _config or CortexConfig()
+    candidates = detect_stale_notes(vault, graph, config.lifecycle)
+
+    return {
+        "total_stale": len(candidates),
+        "candidates": [
+            {
+                "note_id": c.note.id,
+                "title": c.note.title,
+                "note_type": c.note.note_type,
+                "staleness_score": round(c.staleness_score, 2),
+                "reasons": c.reasons,
+                "suggested_action": c.suggested_action,
+            }
+            for c in candidates
+        ],
     }

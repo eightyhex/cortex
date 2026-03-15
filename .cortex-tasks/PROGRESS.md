@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 11.3 — Staleness Detection
-**Next task:** Task 11.4 — Lifecycle MCP Tools & Eval Cases
-**Session:** 26 of 14
+**Last completed task:** Task 11.4 — Lifecycle MCP Tools & Eval Cases
+**Next task:** Task 12.1 — Inbox Processing Workflow
+**Session:** 27 of 14
 
 ## Completed Tasks
 
@@ -44,6 +44,7 @@
 - Task 11.1 — LifecycleManager: Edit Flow ✅
 - Task 11.2 — LifecycleManager: Archive & Supersede ✅
 - Task 11.3 — Staleness Detection ✅
+- Task 11.4 — Lifecycle MCP Tools & Eval Cases ✅
 
 ## Notes & Decisions
 
@@ -367,6 +368,14 @@
 - Results sorted by staleness_score descending (most stale first)
 - Files: `src/cortex/lifecycle/staleness.py`, `tests/test_lifecycle/test_staleness.py`
 - Tests: 8 new tests, 318 total — all pass
+
+### 2026-03-15 — Task 11.4 ✅
+- Added 6 lifecycle MCP tools: `edit_note`, `approve_edit`, `archive_note`, `unarchive_note`, `supersede_note`, `detect_stale`
+- Extended `init_server()` with optional `graph` parameter; auto-creates `LifecycleManager` when both index and graph are available
+- Added `_get_lifecycle()` and `_get_graph()` helper functions with proper error handling
+- Added 11 lifecycle-specific eval cases (q026–q036) covering supersession ranking, archival penalty, and edit consistency
+- Files: `src/cortex/mcp/server.py`, `evals/golden_dataset.json`, `tests/test_mcp/test_lifecycle_tools.py`
+- Tests: 17 new tests, 335 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
