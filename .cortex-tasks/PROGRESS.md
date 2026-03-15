@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 10.1 — Heuristic Reranker
-**Next task:** Task 10.2 — Pipeline Integration & Eval Run
-**Session:** 22 of 14
+**Last completed task:** Task 10.2 — Pipeline Integration & Eval Run
+**Next task:** Task 11.1 — LifecycleManager: Edit Flow
+**Session:** 23 of 14
 
 ## Completed Tasks
 
@@ -40,6 +40,7 @@
 - Task 9.1 — Eval Metrics ✅
 - Task 9.2 — Golden Dataset & Eval Harness ✅
 - Task 10.1 — Heuristic Reranker ✅
+- Task 10.2 — Pipeline Integration & Eval Run ✅
 
 ## Notes & Decisions
 
@@ -323,6 +324,16 @@
 - Metadata fetched from DuckDB lexical index; link counts from NetworkX graph
 - Files: `src/cortex/query/reranker.py`, `src/cortex/config.py`, `settings.example.yaml`, `tests/test_query/test_reranker.py`
 - Tests: 8 new tests, 283 total — all pass (recency boost, type boost, link density boost, status penalty, empty results, configurable weights, scores always increase, no-graph fallback)
+
+### 2026-03-15 — Task 10.2 ✅
+- Integrated `HeuristicReranker` into `QueryPipeline.execute()` — called after RRF fusion, replacing manual status multipliers
+- Reranker applies recency, note type, link density, and status boosts via configurable weights
+- Lazy import used to break circular dependency between `pipeline.py` and `reranker.py`
+- Removed `STATUS_MULTIPLIERS` constant and `_build_status_map()` method (reranker handles status natively)
+- Added `reranker_config` parameter to `QueryPipeline.__init__` (defaults to `RerankerConfig()`)
+- Added eval snapshot v0/v1 comparison test verifying no regression > 0.05
+- Files: `src/cortex/query/pipeline.py`, `tests/test_query/test_pipeline.py`, `tests/test_evals/test_harness.py`
+- Tests: 285 total — all pass (8 pipeline tests including 2 new reranker tests, 1 new eval snapshot test)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

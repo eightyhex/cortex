@@ -521,7 +521,7 @@
 ---
 
 ### Task 10.2 — Pipeline Integration & Eval Run
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/pipeline.py` (extend)
 **Depends on:** Task 10.1, 9.2
 

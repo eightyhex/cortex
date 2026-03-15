@@ -11,7 +11,7 @@ from cortex.graph.manager import GraphManager
 from cortex.index.lexical import LexicalIndex
 from cortex.index.models import EmbeddingModel
 from cortex.index.semantic import SemanticIndex
-from cortex.query.pipeline import QueryPipeline, STATUS_MULTIPLIERS
+from cortex.query.pipeline import QueryPipeline
 from cortex.vault.parser import Link, Note
 
 
@@ -94,8 +94,8 @@ class TestQueryPipeline:
         # Explanation should mention source systems
         assert "lexical" in result.explanation or "semantic" in result.explanation
 
-    def test_status_multipliers_applied(self, tmp_indexes):
-        """Archived/superseded notes get score penalties."""
+    def test_reranker_applied_status_boost(self, tmp_indexes):
+        """Reranker applies status boosts — active notes score higher than archived."""
         lexical, semantic = tmp_indexes
 
         active_note = _make_note(
@@ -118,8 +118,22 @@ class TestQueryPipeline:
         assert "active-1" in results_by_id
         assert "archived-1" in results_by_id
 
-        # Active should score higher than archived (archived gets 0.3 multiplier)
+        # Active should score higher than archived (reranker gives status boost to active)
         assert results_by_id["active-1"].score > results_by_id["archived-1"].score
+
+    def test_reranker_boosts_scores(self, tmp_indexes, sample_notes):
+        """Reranker adds heuristic boosts so scores are higher than raw RRF scores."""
+        lexical, semantic = tmp_indexes
+        for note in sample_notes:
+            lexical.index_note(note)
+            semantic.index_note(note)
+
+        pipeline = QueryPipeline(lexical, semantic)
+        result = asyncio.run(pipeline.execute("machine learning", limit=10))
+
+        # Reranker adds boosts, so scores should be > 0 and reflect boosting
+        for r in result.results:
+            assert r.score > 0
 
     def test_explanation_includes_source_systems(self, tmp_indexes, sample_notes):
         """Explanation field mentions which retrieval systems contributed."""

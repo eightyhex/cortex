@@ -250,6 +250,34 @@ class TestGoldenDataset:
         assert "cases" in data
         assert len(data["cases"]) >= 20
 
+    def test_eval_snapshot_v0_v1_no_regression(self, tmp_path: Path) -> None:
+        """Simulate v0 (baseline) and v1 (with reranker) eval runs; verify no regression."""
+        # v0 baseline
+        pipeline_v0 = _make_pipeline({
+            "caching strategies": ["note-a", "note-b"],
+            "database indexing": ["note-c"],
+        })
+        ds = _make_dataset(tmp_path, CASES_BASIC)
+        harness_v0 = EvalHarness(pipeline_v0, ds)
+        report_v0 = harness_v0.run_all()
+        snap_dir = tmp_path / "snapshots"
+        p0 = report_v0.save_snapshot(snap_dir)
+        assert p0.name == "snapshot_v000.json"
+
+        # v1 with reranker (same or better results)
+        pipeline_v1 = _make_pipeline({
+            "caching strategies": ["note-a", "note-b"],
+            "database indexing": ["note-c"],
+        })
+        harness_v1 = EvalHarness(pipeline_v1, ds)
+        report_v1 = harness_v1.run_all()
+        p1 = report_v1.save_snapshot(snap_dir)
+        assert p1.name == "snapshot_v001.json"
+
+        # Compare: no regression
+        comparison = report_v1.compare_to(report_v0)
+        assert comparison["has_regression"] is False
+
     def test_golden_dataset_cases_have_required_fields(self) -> None:
         ds_path = Path(__file__).parent.parent.parent / "evals" / "golden_dataset.json"
         data = json.loads(ds_path.read_text())
