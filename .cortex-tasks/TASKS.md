@@ -273,7 +273,7 @@
 ---
 
 ### Task 5.2 — Semantic Boundary Chunker
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/chunker.py` (new file)
 **Depends on:** Task 5.1
 

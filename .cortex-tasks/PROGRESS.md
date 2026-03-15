@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 5.1 — Embedding Model Wrapper
-**Next task:** Task 5.2 — Semantic Boundary Chunker
-**Session:** 8 of 14
+**Last completed task:** Task 5.2 — Semantic Boundary Chunker
+**Next task:** Task 5.3 — SemanticIndex (LanceDB)
+**Session:** 9 of 14
 
 ## Completed Tasks
 
@@ -26,6 +26,7 @@
 - Task 4.1 — LexicalIndex Core ✅
 - Task 4.2 — IndexManager Skeleton ✅
 - Task 5.1 — Embedding Model Wrapper ✅
+- Task 5.2 — Semantic Boundary Chunker ✅
 
 ## Notes & Decisions
 
@@ -166,6 +167,15 @@
 - Tags stored as both `VARCHAR[]` (filtering) and `tags_text VARCHAR` (FTS)
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 17 new tests, 125 total — all pass (index, upsert, remove, rebuild, search by keyword, filters, BM25 ranking, limit, snippets, empty results)
+
+### 2026-03-15 — Task 5.2 ✅
+- Implemented `chunk_note()` and `Chunk` dataclass in `src/cortex/index/chunker.py`
+- Splits on paragraph boundaries (`\n\n`) first, then sentence boundaries for oversized paragraphs
+- Merges small consecutive paragraphs up to target_tokens
+- Short notes (< target_tokens) become a single chunk
+- Chunk ID format: `{note_id}__chunk_{N}`
+- Files: `src/cortex/index/chunker.py`, `tests/test_index/test_chunker.py`
+- Tests: 8 new tests, 144 total — all pass (short note, long note, paragraph split, sentence split, token counting, chunk ID format, empty content, merging small paragraphs)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
