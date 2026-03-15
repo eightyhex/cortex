@@ -91,7 +91,7 @@
 ## Session 2: Markdown Parser & Metadata Extractor
 
 ### Task 2.1 — Frontmatter Parser
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/parser.py`
 **Depends on:** Task 1.1
 

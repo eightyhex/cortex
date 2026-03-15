@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 1.5 — Justfile Dev Commands
-**Next task:** Task 2.1 — Frontmatter Parser
+**Last completed task:** Task 2.1 — Frontmatter Parser
+**Next task:** Task 2.2 — Link & Tag Extractor
 **Session:** 2 of 14
 
 ## Completed Tasks
@@ -16,6 +16,7 @@
 - Task 1.3 — Note Templates Module ✅
 - Task 1.4 — Dockerfile & Docker Compose ✅
 - Task 1.5 — Justfile Dev Commands ✅
+- Task 2.1 — Frontmatter Parser ✅
 
 ## Notes & Decisions
 
@@ -66,6 +67,14 @@
 - Added `docker-shell` for interactive container access
 - Files: `justfile`
 - Tests: 22 existing tests still pass (justfile is config, not code)
+
+### 2026-03-15 — Task 2.1 ✅
+- Implemented `Note` dataclass and `parse_note()` in `src/cortex/vault/parser.py`
+- Uses `python-frontmatter` to extract YAML frontmatter from markdown files
+- Handles missing frontmatter, missing fields, empty files gracefully with sensible defaults
+- Note dataclass includes all fields: id, title, note_type, path, content, frontmatter, created, modified, tags, links, status, supersedes, superseded_by, archived_date
+- Files: `src/cortex/vault/parser.py`, `tests/test_vault/test_parser.py`
+- Tests: 9 tests, all pass (valid note, missing frontmatter, missing fields, empty file, all note types, unicode content, task fields, source fields, supersession fields)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
