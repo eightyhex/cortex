@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 11.2 — LifecycleManager: Archive & Supersede
-**Next task:** Task 11.3 — Staleness Detection
-**Session:** 25 of 14
+**Last completed task:** Task 11.3 — Staleness Detection
+**Next task:** Task 11.4 — Lifecycle MCP Tools & Eval Cases
+**Session:** 26 of 14
 
 ## Completed Tasks
 
@@ -43,6 +43,7 @@
 - Task 10.2 — Pipeline Integration & Eval Run ✅
 - Task 11.1 — LifecycleManager: Edit Flow ✅
 - Task 11.2 — LifecycleManager: Archive & Supersede ✅
+- Task 11.3 — Staleness Detection ✅
 
 ## Notes & Decisions
 
@@ -354,6 +355,18 @@
 - Score multipliers already handled by HeuristicReranker (Task 10.2): archived=0.0 status boost, superseded=0.0 status boost
 - Files: `src/cortex/lifecycle/manager.py`, `tests/test_lifecycle/test_archive.py`, `tests/test_lifecycle/test_supersede.py`
 - Tests: 14 new tests (8 archive/unarchive + 6 supersede), 310 total — all pass
+
+### 2026-03-15 — Task 11.3 ✅
+- Implemented `detect_stale_notes(vault, graph, config)` in `src/cortex/lifecycle/staleness.py`
+- `StaleCandidate` dataclass with `note`, `staleness_score`, `reasons`, `suggested_action`
+- Type-aware thresholds: inbox/task=30d, source=90d, concept/permanent=365d (from `LifecycleConfig.staleness_thresholds`)
+- Notes with `evergreen: true` frontmatter are exempt
+- Orphan detection: notes with no inbound LINKS_TO edges get +0.5 score penalty
+- Archived/superseded notes are skipped
+- Suggested actions: "archive" (score>2.0), "categorize" (inbox), "review" (default)
+- Results sorted by staleness_score descending (most stale first)
+- Files: `src/cortex/lifecycle/staleness.py`, `tests/test_lifecycle/test_staleness.py`
+- Tests: 8 new tests, 318 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

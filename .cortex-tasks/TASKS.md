@@ -572,7 +572,7 @@
 ---
 
 ### Task 11.3 — Staleness Detection
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/lifecycle/staleness.py`
 **Depends on:** Task 11.2, 8.1
 
