@@ -27,19 +27,25 @@ def _make_note(
     content: str,
     note_type: str = "concept",
     tags: list[str] | None = None,
+    status: str = "active",
+    modified: str = "2026-01-15T10:00:00",
+    frontmatter_extra: dict | None = None,
 ) -> Note:
+    fm = {"id": note_id, "title": title, "type": note_type}
+    if frontmatter_extra:
+        fm.update(frontmatter_extra)
     return Note(
         id=note_id,
         title=title,
         note_type=note_type,
         path=Path(f"20-concepts/{title.lower().replace(' ', '-')}.md"),
         content=content,
-        frontmatter={"id": note_id, "title": title, "type": note_type},
+        frontmatter=fm,
         created="2026-01-15T10:00:00",
-        modified="2026-01-15T10:00:00",
+        modified=modified,
         tags=tags or [],
         links=[],
-        status="active",
+        status=status,
     )
 
 
@@ -146,3 +152,45 @@ class TestSemanticIndex:
         r = results[0]
         assert r.note_id == "p1"
         assert r.path == "20-concepts/path-test.md"
+
+    def test_search_result_includes_status_and_metadata(self, semantic_index):
+        """Archived and superseded notes have correct metadata in search results."""
+        archived_note = _make_note(
+            "arc1", "Archived Concept", "This archived note about quantum computing should have archived status.",
+            status="archived",
+            modified="2026-02-20T14:30:00",
+        )
+        superseded_note = _make_note(
+            "sup1", "Old Approach", "This superseded note about database design was replaced by a newer version.",
+            status="superseded",
+            modified="2026-03-01T09:00:00",
+            frontmatter_extra={"superseded_by": "new1", "supersedes": ""},
+        )
+        active_note = _make_note(
+            "new1", "New Approach", "This active note about database design supersedes the old approach.",
+            status="active",
+            modified="2026-03-10T12:00:00",
+            frontmatter_extra={"supersedes": "sup1"},
+        )
+        for n in [archived_note, superseded_note, active_note]:
+            semantic_index.index_note(n)
+
+        # Check archived note metadata
+        results = semantic_index.search("quantum computing archived")
+        arc_results = [r for r in results if r.note_id == "arc1"]
+        assert len(arc_results) == 1
+        assert arc_results[0].status == "archived"
+        assert arc_results[0].modified == "2026-02-20T14:30:00"
+
+        # Check superseded note metadata
+        results = semantic_index.search("database design superseded old")
+        sup_results = [r for r in results if r.note_id == "sup1"]
+        assert len(sup_results) == 1
+        assert sup_results[0].status == "superseded"
+        assert sup_results[0].superseded_by == "new1"
+
+        # Check active note with supersedes
+        new_results = [r for r in results if r.note_id == "new1"]
+        assert len(new_results) == 1
+        assert new_results[0].status == "active"
+        assert new_results[0].supersedes == "sup1"

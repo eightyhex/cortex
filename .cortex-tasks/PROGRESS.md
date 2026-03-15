@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.3 — Add path Field to Semantic Index Schema
-**Next task:** Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
-**Session:** 16
+**Last completed task:** Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
+**Next task:** Task 15.5 — Populate Snippets for Graph Search Results
+**Session:** 17
 
 ## Completed Tasks
 
@@ -55,6 +55,7 @@
 - Task 15.1 — Wire Graph Manager into search_vault MCP Tool ✅
 - Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline ✅
 - Task 15.3 — Add path Field to Semantic Index Schema ✅
+- Task 15.4 — Add status, modified, and supersession Fields to Semantic Index ✅
 
 ## Notes & Decisions
 
@@ -476,6 +477,15 @@
 - `rebuild()` includes path in stored records (inherits from `index_note`)
 - Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
 - Tests: 1 new test (`test_search_result_includes_path`), 403 total — all pass
+
+### 2026-03-15 — Task 15.4 ✅
+- Added `status`, `modified`, `supersedes`, `superseded_by` fields to LanceDB `_schema` in `src/cortex/index/semantic.py`
+- Extended `SearchResult` dataclass in `src/cortex/index/lexical.py` with 4 optional fields (defaults to empty string)
+- `index_note()` populates new fields from `note.status`, `note.modified`, and `note.frontmatter`
+- `search()` returns `SearchResult` with all new fields populated from LanceDB rows
+- `rebuild()` inherits new fields via `index_note()`
+- Files: `src/cortex/index/semantic.py`, `src/cortex/index/lexical.py`, `tests/test_index/test_semantic.py`
+- Tests: 1 new test (`test_search_result_includes_status_and_metadata`), 404 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

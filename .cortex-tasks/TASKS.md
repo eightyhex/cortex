@@ -771,7 +771,7 @@
 ---
 
 ### Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/semantic.py`
 **Depends on:** Task 15.3
 

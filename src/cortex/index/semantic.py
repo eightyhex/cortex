@@ -31,6 +31,10 @@ class SemanticIndex:
         pa.field("tags", pa.utf8()),
         pa.field("created", pa.utf8()),
         pa.field("path", pa.utf8()),
+        pa.field("status", pa.utf8()),
+        pa.field("modified", pa.utf8()),
+        pa.field("supersedes", pa.utf8()),
+        pa.field("superseded_by", pa.utf8()),
     ])
 
     def __init__(self, db_path: Path, model: EmbeddingModel) -> None:
@@ -65,6 +69,12 @@ class SemanticIndex:
         )
 
         path_str = str(note.path) if note.path else ""
+        modified_str = note.modified if isinstance(note.modified, str) else (
+            note.modified.isoformat() if note.modified else ""
+        )
+        status_str = note.status or note.frontmatter.get("status", "")
+        supersedes_str = note.frontmatter.get("supersedes", "") or ""
+        superseded_by_str = note.frontmatter.get("superseded_by", "") or ""
 
         records = []
         for chunk, vector in zip(chunks, vectors):
@@ -78,6 +88,10 @@ class SemanticIndex:
                 "tags": tags_str,
                 "created": created_str,
                 "path": path_str,
+                "status": status_str,
+                "modified": modified_str,
+                "supersedes": supersedes_str,
+                "superseded_by": superseded_by_str,
             })
 
         table = self._get_table()
@@ -136,6 +150,10 @@ class SemanticIndex:
                     snippet=row["text"][:200],
                     note_type=row["note_type"],
                     path=row.get("path", ""),
+                    status=row.get("status", ""),
+                    modified=row.get("modified", ""),
+                    supersedes=row.get("supersedes", ""),
+                    superseded_by=row.get("superseded_by", ""),
                 )
 
         return sorted(seen.values(), key=lambda r: r.score, reverse=True)

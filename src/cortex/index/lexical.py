@@ -20,6 +20,10 @@ class SearchResult:
     snippet: str
     note_type: str
     path: str
+    status: str = ""
+    modified: str = ""
+    supersedes: str = ""
+    superseded_by: str = ""
 
 
 class LexicalIndex:
