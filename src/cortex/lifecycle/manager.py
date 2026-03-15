@@ -135,3 +135,81 @@ class LifecycleManager:
         self.draft_mgr.reject_draft(draft_id)
 
         return updated_note
+
+    def archive_note(self, note_id: str) -> Note:
+        """Archive a note: set status=archived and archived_date, re-index.
+
+        Args:
+            note_id: ID of the note to archive.
+
+        Returns:
+            The updated Note with archived status.
+        """
+        now = datetime.now(timezone.utc)
+        updated = self.vault.update_note(
+            note_id,
+            metadata={"status": "archived", "archived_date": now.isoformat()},
+        )
+        self.index.reindex_note(updated)
+        self.graph.update_note(updated)
+        return updated
+
+    def unarchive_note(self, note_id: str) -> Note:
+        """Restore an archived note to active status.
+
+        Args:
+            note_id: ID of the note to unarchive.
+
+        Returns:
+            The updated Note with active status.
+        """
+        updated = self.vault.update_note(
+            note_id,
+            metadata={"status": "active", "archived_date": None},
+        )
+        self.index.reindex_note(updated)
+        self.graph.update_note(updated)
+        return updated
+
+    def supersede_note(
+        self, old_note_id: str, new_note_id: str
+    ) -> tuple[Note, Note]:
+        """Mark old_note as superseded by new_note with bidirectional links.
+
+        Sets superseded_by on the old note, supersedes on the new note,
+        adds a SUPERSEDES graph edge, and re-indexes both.
+
+        Args:
+            old_note_id: ID of the note being superseded.
+            new_note_id: ID of the note that supersedes it.
+
+        Returns:
+            Tuple of (old_note, new_note) after updates.
+        """
+        # Update old note: mark as superseded
+        old_note = self.vault.update_note(
+            old_note_id,
+            metadata={
+                "status": "superseded",
+                "superseded_by": new_note_id,
+            },
+        )
+
+        # Update new note: record what it supersedes
+        new_note = self.vault.update_note(
+            new_note_id,
+            metadata={"supersedes": old_note_id},
+        )
+
+        # Add SUPERSEDES edge in graph
+        self.graph.graph.add_edge(
+            new_note_id, old_note_id, rel_type="SUPERSEDES"
+        )
+
+        # Re-index both notes
+        self.index.reindex_note(old_note)
+        self.index.reindex_note(new_note)
+        self.graph.update_note(old_note)
+        self.graph.update_note(new_note)
+
+        return old_note, new_note

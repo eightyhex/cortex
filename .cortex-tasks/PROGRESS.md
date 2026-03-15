@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 11.1 — LifecycleManager: Edit Flow
-**Next task:** Task 11.2 — LifecycleManager: Archive & Supersede
-**Session:** 24 of 14
+**Last completed task:** Task 11.2 — LifecycleManager: Archive & Supersede
+**Next task:** Task 11.3 — Staleness Detection
+**Session:** 25 of 14
 
 ## Completed Tasks
 
@@ -42,6 +42,7 @@
 - Task 10.1 — Heuristic Reranker ✅
 - Task 10.2 — Pipeline Integration & Eval Run ✅
 - Task 11.1 — LifecycleManager: Edit Flow ✅
+- Task 11.2 — LifecycleManager: Archive & Supersede ✅
 
 ## Notes & Decisions
 
@@ -345,6 +346,14 @@
 - `modified` timestamp updated on commit via `VaultManager.update_note()`
 - Files: `src/cortex/lifecycle/manager.py`, `tests/test_lifecycle/__init__.py`, `tests/test_lifecycle/test_edit.py`
 - Tests: 11 new tests, 296 total — all pass (start_edit creates draft, diff included, title preserved/changed, tags changed, draft persisted, commit updates vault, commit reindexes, commit updates modified, commit removes draft, non-edit draft raises)
+
+### 2026-03-15 — Task 11.2 ✅
+- Implemented `archive_note(note_id)` — sets status=archived, archived_date, re-indexes in lexical+semantic+graph
+- Implemented `unarchive_note(note_id)` — restores to active, clears archived_date (uses None to avoid parser ISO format error)
+- Implemented `supersede_note(old_note_id, new_note_id)` — bidirectional frontmatter links (superseded_by/supersedes), SUPERSEDES graph edge, status=superseded on old note, re-indexes both
+- Score multipliers already handled by HeuristicReranker (Task 10.2): archived=0.0 status boost, superseded=0.0 status boost
+- Files: `src/cortex/lifecycle/manager.py`, `tests/test_lifecycle/test_archive.py`, `tests/test_lifecycle/test_supersede.py`
+- Tests: 14 new tests (8 archive/unarchive + 6 supersede), 310 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

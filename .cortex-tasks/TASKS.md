@@ -555,7 +555,7 @@
 ---
 
 ### Task 11.2 — LifecycleManager: Archive & Supersede
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/lifecycle/manager.py` (extend)
 **Depends on:** Task 11.1, 8.1
 
