@@ -538,7 +538,7 @@
 ## Session 11: Note Lifecycle Management
 
 ### Task 11.1 — LifecycleManager: Edit Flow
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/lifecycle/manager.py`
 **Depends on:** Task 3.1, 3.2, 4.2, 5.4
 

@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 10.2 — Pipeline Integration & Eval Run
-**Next task:** Task 11.1 — LifecycleManager: Edit Flow
-**Session:** 23 of 14
+**Last completed task:** Task 11.1 — LifecycleManager: Edit Flow
+**Next task:** Task 11.2 — LifecycleManager: Archive & Supersede
+**Session:** 24 of 14
 
 ## Completed Tasks
 
@@ -41,6 +41,7 @@
 - Task 9.2 — Golden Dataset & Eval Harness ✅
 - Task 10.1 — Heuristic Reranker ✅
 - Task 10.2 — Pipeline Integration & Eval Run ✅
+- Task 11.1 — LifecycleManager: Edit Flow ✅
 
 ## Notes & Decisions
 
@@ -334,6 +335,16 @@
 - Added eval snapshot v0/v1 comparison test verifying no regression > 0.05
 - Files: `src/cortex/query/pipeline.py`, `tests/test_query/test_pipeline.py`, `tests/test_evals/test_harness.py`
 - Tests: 285 total — all pass (8 pipeline tests including 2 new reranker tests, 1 new eval snapshot test)
+
+### 2026-03-15 — Task 11.1 ✅
+- Implemented `LifecycleManager` class in `src/cortex/lifecycle/manager.py` with edit-with-review flow
+- `__init__(vault, index, graph, draft_mgr)` — accepts all required dependencies
+- `start_edit(note_id, changes)` — loads note, applies changes, generates unified diff, creates and persists a NoteDraft with `_edit_note_id` and `_diff` metadata
+- `commit_edit(draft_id)` — approves edit draft, updates vault note (content + metadata), re-indexes in lexical+semantic indexes, updates graph, cleans up draft
+- Diff included in draft preview via `_diff` frontmatter field
+- `modified` timestamp updated on commit via `VaultManager.update_note()`
+- Files: `src/cortex/lifecycle/manager.py`, `tests/test_lifecycle/__init__.py`, `tests/test_lifecycle/test_edit.py`
+- Tests: 11 new tests, 296 total — all pass (start_edit creates draft, diff included, title preserved/changed, tags changed, draft persisted, commit updates vault, commit reindexes, commit updates modified, commit removes draft, non-edit draft raises)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
