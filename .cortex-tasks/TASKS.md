@@ -788,7 +788,7 @@
 ---
 
 ### Task 15.5 — Populate Snippets for Graph Search Results
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/graph/queries.py`
 **Depends on:** Task 8.2
 

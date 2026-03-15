@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.4 — Add status, modified, and supersession Fields to Semantic Index
-**Next task:** Task 15.5 — Populate Snippets for Graph Search Results
-**Session:** 17
+**Last completed task:** Task 15.5 — Populate Snippets for Graph Search Results
+**Next task:** Task 15.6 — Ensure Reranker Handles Notes from All Search Sources
+**Session:** 18
 
 ## Completed Tasks
 
@@ -56,6 +56,7 @@
 - Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline ✅
 - Task 15.3 — Add path Field to Semantic Index Schema ✅
 - Task 15.4 — Add status, modified, and supersession Fields to Semantic Index ✅
+- Task 15.5 — Populate Snippets for Graph Search Results ✅
 
 ## Notes & Decisions
 
@@ -486,6 +487,14 @@
 - `rebuild()` inherits new fields via `index_note()`
 - Files: `src/cortex/index/semantic.py`, `src/cortex/index/lexical.py`, `tests/test_index/test_semantic.py`
 - Tests: 1 new test (`test_search_result_includes_status_and_metadata`), 404 total — all pass
+
+### 2026-03-15 — Task 15.5 ✅
+- Added optional `vault` parameter to `graph_search()` in `src/cortex/graph/queries.py`
+- When vault is provided, fetches note content and populates `snippet` with first 200 characters
+- When vault is not provided, falls back to `snippet=""` (no regression)
+- Updated `QueryPipeline._safe_graph_search()` in `src/cortex/query/pipeline.py` to pass `self._vault` to `graph_search()`
+- Files: `src/cortex/graph/queries.py`, `src/cortex/query/pipeline.py`, `tests/test_graph/test_queries.py`
+- Tests: 2 new tests (vault populates snippets, without vault empty snippets), 406 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

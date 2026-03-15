@@ -14,6 +14,7 @@ from cortex.query.fusion import FusedResult, reciprocal_rank_fusion
 
 if TYPE_CHECKING:
     from cortex.graph.manager import GraphManager
+    from cortex.vault.manager import VaultManager
 
 
 
@@ -48,10 +49,12 @@ class QueryPipeline:
         semantic: SemanticIndex,
         graph: GraphManager | None = None,
         reranker_config: RerankerConfig | None = None,
+        vault: VaultManager | None = None,
     ) -> None:
         self._lexical = lexical
         self._semantic = semantic
         self._graph = graph
+        self._vault = vault
         self._assembler = ContextAssembler()
         from cortex.query.reranker import HeuristicReranker
 
@@ -128,7 +131,17 @@ class QueryPipeline:
         # Assemble context (use fused results truncated to match ranked)
         ranked_ids = {r.note_id for r in ranked}
         fused_for_context = [r for r in fused if r.note_id in ranked_ids][:limit]
-        context = self._assembler.assemble(fused_for_context, query)
+
+        # Look up full notes for metadata (tags, links, created date)
+        notes = {}
+        if self._vault:
+            for r in fused_for_context:
+                try:
+                    notes[r.note_id] = self._vault.get_note(r.note_id)
+                except (KeyError, FileNotFoundError):
+                    pass
+
+        context = self._assembler.assemble(fused_for_context, query, notes=notes)
 
         return QueryResult(
             query=query,
@@ -156,7 +169,7 @@ class QueryPipeline:
         try:
             from cortex.graph.queries import graph_search
 
-            return graph_search(self._graph.graph, seed_ids, depth=depth)
+            return graph_search(self._graph.graph, seed_ids, depth=depth, vault=self._vault)
         except Exception:
             return []
 

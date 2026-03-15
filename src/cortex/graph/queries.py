@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import networkx as nx
 
 from cortex.index.lexical import SearchResult
+
+if TYPE_CHECKING:
+    from cortex.vault.manager import VaultManager
 
 
 def get_neighbors(graph: nx.MultiDiGraph, note_id: str, depth: int = 1) -> list[str]:
@@ -83,6 +88,7 @@ def graph_search(
     graph: nx.MultiDiGraph,
     note_ids: list[str],
     depth: int = 1,
+    vault: VaultManager | None = None,
 ) -> list[SearchResult]:
     """Expand seed note IDs via graph and return neighbor notes as SearchResults.
 
@@ -114,11 +120,20 @@ def graph_search(
                 hop = depth
             score = 1.0 / hop if hop > 0 else 1.0
 
+            snippet = ""
+            if vault is not None:
+                try:
+                    note = vault.get_note(dst)
+                    if note and note.content:
+                        snippet = note.content[:200]
+                except Exception:
+                    pass
+
             results[dst] = SearchResult(
                 note_id=dst,
                 title=node_data.get("title", ""),
                 score=score,
-                snippet="",
+                snippet=snippet,
                 note_type=node_data.get("note_type", ""),
                 path=node_data.get("path", ""),
             )

@@ -218,3 +218,53 @@ class TestGraphSearch:
         assert r.title == "Note B"
         assert r.note_type == "concept"
         assert r.path != ""
+
+    def test_with_vault_populates_snippets(self, tmp_path: Path) -> None:
+        """When vault is provided, graph_search populates snippet from note content."""
+        from cortex.config import CortexConfig
+        from cortex.vault.manager import VaultManager
+
+        # Create a vault with notes matching the graph
+        vault_path = tmp_path / "vault"
+        vault_path.mkdir()
+        for folder in ["20-concepts"]:
+            (vault_path / folder).mkdir()
+
+        long_content = "A" * 300
+        notes = []
+        for nid, title, content in [
+            ("aaa", "Note A", "Content of note A"),
+            ("bbb", "Note B", long_content),
+            ("ccc", "Note C", "Content of note C"),
+            ("ddd", "Note D", "Content of note D"),
+        ]:
+            note = _make_note(
+                note_id=nid,
+                title=title,
+                links=[Link(source_id=nid, target_id="bbb", target_title="B", link_type="wikilink")]
+                if nid == "aaa"
+                else [],
+            )
+            note.content = content
+            # Write note file to vault
+            fm = f"---\nid: {nid}\ntitle: {title}\ntype: concept\nstatus: active\n---\n{content}"
+            (vault_path / f"20-concepts/{nid}.md").write_text(fm)
+            notes.append(note)
+
+        graph = build_graph(notes)
+        config = CortexConfig(vault={"path": str(vault_path)})
+        vault = VaultManager(vault_path, config)
+
+        results = graph_search(graph, ["aaa"], depth=1, vault=vault)
+        by_id = {r.note_id: r for r in results}
+        # bbb should have a snippet truncated to 200 chars
+        assert "bbb" in by_id
+        assert len(by_id["bbb"].snippet) == 200
+        assert by_id["bbb"].snippet == long_content[:200]
+
+    def test_without_vault_empty_snippets(self) -> None:
+        """Without vault, snippets remain empty (no regression)."""
+        graph = _build_chain_graph()
+        results = graph_search(graph, ["aaa"], depth=1)
+        for r in results:
+            assert r.snippet == ""
