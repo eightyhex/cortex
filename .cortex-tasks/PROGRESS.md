@@ -5,14 +5,15 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 1.2 — Vault Directory Scaffolding
-**Next task:** Task 1.3 — Note Templates Module
+**Last completed task:** Task 1.3 — Note Templates Module
+**Next task:** Task 1.4 — Dockerfile & Docker Compose
 **Session:** 1 of 14
 
 ## Completed Tasks
 
 - Task 1.1 — Pydantic Config Module ✅
 - Task 1.2 — Vault Directory Scaffolding ✅
+- Task 1.3 — Note Templates Module ✅
 
 ## Notes & Decisions
 
@@ -37,6 +38,15 @@
 - Creates all 9 folders, copies template files from `vault.example/_templates/`, idempotent
 - Files: `src/cortex/vault/manager.py`, `tests/test_vault/test_scaffold.py`
 - Tests: 4 tests, all pass (folder creation, idempotent re-scaffold, template copy, no-overwrite)
+
+### 2026-03-15 — Task 1.3 ✅
+- Implemented `render_template()` in `src/cortex/vault/templates.py`
+- Supports all 8 note types: inbox, daily, task, source, concept, permanent, project, review
+- Frontmatter includes: id (UUID), title, type, created, modified, tags, status
+- Task type adds due_date and priority; source type adds source_url
+- Output is valid Obsidian-compatible markdown (YAML frontmatter between `---` delimiters)
+- Files: `src/cortex/vault/templates.py`, `tests/test_vault/test_templates.py`
+- Tests: 12 tests, all pass (one per note type, defaults, invalid type, comprehensive coverage)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

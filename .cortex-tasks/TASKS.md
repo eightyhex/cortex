@@ -39,7 +39,7 @@
 ---
 
 ### Task 1.3 — Note Templates Module
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/templates.py`
 **Depends on:** Task 1.1
 
