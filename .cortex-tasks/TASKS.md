@@ -183,7 +183,7 @@
 ---
 
 ### Task 3.3 — Capture Commands
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/capture/thought.py`, `task.py`, `link.py`, `note.py`
 **Depends on:** Task 3.1, 3.2
 

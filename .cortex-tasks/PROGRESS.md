@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 3.2 — VaultManager Write Operations
-**Next task:** Task 3.3 — Capture Commands
+**Last completed task:** Task 3.3 — Capture Commands
+**Next task:** Task 3.4 — DraftManager.approve_draft Integration
 **Session:** 5 of 14
 
 ## Completed Tasks
@@ -21,6 +21,7 @@
 - Task 2.3 — VaultManager Read Operations ✅
 - Task 3.1 — NoteDraft & DraftManager ✅
 - Task 3.2 — VaultManager Write Operations ✅
+- Task 3.3 — Capture Commands ✅
 
 ## Notes & Decisions
 
@@ -115,6 +116,15 @@
 - `update_note` finds note by ID, merges metadata, bumps `modified` timestamp, rewrites file
 - Files: `src/cortex/vault/manager.py`, `tests/test_vault/test_manager_write.py`
 - Tests: 7 new tests, 88 total — all pass (create from draft, ensure parent dir, file content match, update content, update metadata, bump modified, persist to disk)
+
+### 2026-03-15 — Task 3.3 ✅
+- Implemented four capture commands: `capture_thought`, `add_task`, `save_link`, `create_note`
+- Each function takes a `DraftManager` and produces a `NoteDraft` via `create_draft()`
+- `capture_thought` auto-derives title from first line (truncated to 60 chars)
+- `save_link` defaults title to URL when not provided
+- `create_note` is generic and works with any note type (concept, permanent, project, etc.)
+- Files: `src/cortex/capture/thought.py`, `task.py`, `link.py`, `note.py`, `tests/test_capture/test_commands.py`
+- Tests: 16 new tests, 104 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
