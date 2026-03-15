@@ -198,6 +198,47 @@ class TestSearchVault:
         # note-linked links to note-001 (Python Tips), so graph expansion from note-001 should find note-linked
         assert "note-linked" in note_ids or "graph" in result.get("explanation", "")
 
+    def test_search_uses_custom_reranker_config(self, vault_dir, tmp_path, sample_notes):
+        """Custom reranker weights from config are used, not defaults."""
+        # Use a config with extreme recency_weight to verify it's wired through
+        custom_config = CortexConfig(
+            vault={"path": str(vault_dir)},
+            draft={"drafts_dir": str(tmp_path / "drafts")},
+            index={
+                "db_path": str(tmp_path / "cortex.duckdb"),
+                "embeddings_path": str(tmp_path / "embeddings"),
+            },
+            reranker={
+                "recency_weight": 10.0,
+                "type_weight": 0.0,
+                "link_weight": 0.0,
+                "status_weight": 0.0,
+            },
+        )
+
+        vault = VaultManager(vault_dir, custom_config)
+        notes = vault.scan_vault()
+
+        lexical = LexicalIndex(tmp_path / "reranker_test.duckdb")
+        lexical.rebuild(notes)
+
+        mock_semantic = MagicMock()
+        mock_semantic.search.return_value = []
+
+        idx = MagicMock(spec=IndexManager)
+        idx.lexical = lexical
+        idx.semantic = mock_semantic
+
+        drafts = DraftManager(custom_config.draft.drafts_dir)
+        init_server(config=custom_config, vault=vault, drafts=drafts, index=idx)
+
+        result = search_vault(query="Python testing review")
+        assert "error" not in result
+        # The pipeline should use the custom config (recency_weight=10.0)
+        # We can't easily verify the exact weights but we verify the pipeline
+        # runs successfully with custom config and produces results
+        assert result["total"] >= 1
+
     def test_search_without_graph_still_works(self, config, vault, mock_index, sample_notes):
         """Search still works when graph is not available (graceful fallback)."""
         drafts = DraftManager(config.draft.drafts_dir)

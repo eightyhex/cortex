@@ -288,7 +288,14 @@ def search_vault(
     except RuntimeError:
         graph = None
 
-    pipeline = QueryPipeline(idx.lexical, idx.semantic, graph=graph, vault=vault)
+    config = _config or CortexConfig()
+    pipeline = QueryPipeline(
+        idx.lexical,
+        idx.semantic,
+        graph=graph,
+        reranker_config=config.reranker,
+        vault=vault,
+    )
 
     try:
         loop = asyncio.get_event_loop()

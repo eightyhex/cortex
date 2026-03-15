@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.1 — Wire Graph Manager into search_vault MCP Tool
-**Next task:** Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
+**Last completed task:** Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
+**Next task:** Task 15.3 — Add path Field to Semantic Index Schema
 **Session:** 15
 
 ## Completed Tasks
@@ -53,6 +53,7 @@
 - Task 14.1 — Health Check & Error Handling ✅
 - Task 14.2 — Final Eval & Documentation ✅
 - Task 15.1 — Wire Graph Manager into search_vault MCP Tool ✅
+- Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline ✅
 
 ## Notes & Decisions
 
@@ -459,6 +460,13 @@
 - Search results now include notes discovered via graph expansion (matched_by includes "graph")
 - Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
 - Tests: 2 new tests (graph expansion, graceful fallback without graph), 401 total — all pass
+
+### 2026-03-15 — Task 15.2 ✅
+- Wired `RerankerConfig` from `_config.reranker` into `QueryPipeline` in `search_vault` MCP tool
+- Previously, `search_vault` created `QueryPipeline` without passing `reranker_config`, so user settings in `settings.yaml` were silently ignored
+- Now `QueryPipeline` receives the active config's reranker weights (recency, type, link, status)
+- Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
+- Tests: 1 new test (custom reranker config), 402 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

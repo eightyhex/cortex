@@ -739,7 +739,7 @@
 ---
 
 ### Task 15.2 — Wire RerankerConfig from Settings into QueryPipeline
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/mcp/server.py`
 **Depends on:** Task 10.1, 7.2
 
