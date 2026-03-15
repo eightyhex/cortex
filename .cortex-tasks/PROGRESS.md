@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 2.2 — Link & Tag Extractor
-**Next task:** Task 2.3 — VaultManager Read Operations
-**Session:** 2 of 14
+**Last completed task:** Task 2.3 — VaultManager Read Operations
+**Next task:** Task 3.1 — NoteDraft & DraftManager
+**Session:** 3 of 14
 
 ## Completed Tasks
 
@@ -18,6 +18,7 @@
 - Task 1.5 — Justfile Dev Commands ✅
 - Task 2.1 — Frontmatter Parser ✅
 - Task 2.2 — Link & Tag Extractor ✅
+- Task 2.3 — VaultManager Read Operations ✅
 
 ## Notes & Decisions
 
@@ -85,6 +86,16 @@
 - Inline tag extraction excludes tags inside code blocks (fenced and inline)
 - Files: `src/cortex/vault/parser.py`, `tests/test_vault/test_links.py`
 - Tests: 16 new tests, 47 total — all pass (wikilinks, aliased wikilinks, markdown links, inline tags, code block exclusion, mixed content, tag merging, no links)
+
+### 2026-03-15 — Task 2.3 ✅
+- Implemented `VaultManager` class in `src/cortex/vault/manager.py` with read operations
+- `__init__(vault_path, config)` — stores resolved path, verifies vault exists
+- `get_note(note_id)` — finds note by UUID scanning all vault notes
+- `get_note_by_path(path)` — parses note at given path (absolute or relative)
+- `list_notes(folder, note_type)` — lists all notes with optional filtering
+- `scan_vault()` — parses all `.md` files excluding `_templates/`
+- Files: `src/cortex/vault/manager.py`, `tests/test_vault/test_manager.py`
+- Tests: 14 new tests, 61 total — all pass (init, missing path, scan, template exclusion, get by id, get by path, list with filters, empty results)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

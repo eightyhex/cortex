@@ -126,7 +126,7 @@
 ---
 
 ### Task 2.3 — VaultManager Read Operations
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/vault/manager.py`
 **Depends on:** Task 2.1, 2.2
 
