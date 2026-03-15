@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 5.4 — IndexManager Integration with SemanticIndex
-**Next task:** Task 6.1 — Reciprocal Rank Fusion
-**Session:** 11 of 14
+**Last completed task:** Task 6.1 — Reciprocal Rank Fusion
+**Next task:** Task 6.2 — Context Assembler
+**Session:** 12 of 14
 
 ## Completed Tasks
 
@@ -29,6 +29,7 @@
 - Task 5.2 — Semantic Boundary Chunker ✅
 - Task 5.3 — SemanticIndex (LanceDB) ✅
 - Task 5.4 — IndexManager Integration with SemanticIndex ✅
+- Task 6.1 — Reciprocal Rank Fusion ✅
 
 ## Notes & Decisions
 
@@ -197,6 +198,15 @@
 - Added `semantic` property to expose the `SemanticIndex` instance
 - Files: `src/cortex/index/manager.py`, `tests/test_index/test_manager.py`
 - Tests: 6 tests (up from 4), 153 total — all pass (lexical search, semantic search, remove from both, reindex both, rebuild both, semantic property exposed)
+
+### 2026-03-15 — Task 6.1 ✅
+- Implemented `reciprocal_rank_fusion()` in `src/cortex/query/fusion.py`
+- `FusedResult` dataclass extends SearchResult with `matched_by` field tracking contributing systems
+- RRF formula: `score(d) = sum(1 / (k + rank_i(d)))` with configurable k (default 60)
+- Deduplicates by note_id, combines scores, preserves metadata from first occurrence
+- Optional `labels` parameter names each result list for explainability
+- Files: `src/cortex/query/fusion.py`, `tests/test_query/test_fusion.py`
+- Tests: 8 new tests, all pass (merge two lists, merge three lists, deduplication, empty handling, score ordering, matched_by tracking, labels mismatch, metadata preservation)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

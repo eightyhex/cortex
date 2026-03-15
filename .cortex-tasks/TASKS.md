@@ -328,7 +328,7 @@
 ## Session 6: Hybrid Search & Fusion
 
 ### Task 6.1 — Reciprocal Rank Fusion
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/fusion.py`
 **Depends on:** Task 4.1, 5.3
 
