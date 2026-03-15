@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 6.1 — Reciprocal Rank Fusion
-**Next task:** Task 6.2 — Context Assembler
-**Session:** 12 of 14
+**Last completed task:** Task 6.2 — Context Assembler
+**Next task:** Task 6.3 — QueryPipeline
+**Session:** 13 of 14
 
 ## Completed Tasks
 
@@ -30,6 +30,7 @@
 - Task 5.3 — SemanticIndex (LanceDB) ✅
 - Task 5.4 — IndexManager Integration with SemanticIndex ✅
 - Task 6.1 — Reciprocal Rank Fusion ✅
+- Task 6.2 — Context Assembler ✅
 
 ## Notes & Decisions
 
@@ -207,6 +208,16 @@
 - Optional `labels` parameter names each result list for explainability
 - Files: `src/cortex/query/fusion.py`, `tests/test_query/test_fusion.py`
 - Tests: 8 new tests, all pass (merge two lists, merge three lists, deduplication, empty handling, score ordering, matched_by tracking, labels mismatch, metadata preservation)
+
+### 2026-03-15 — Task 6.2 ✅
+- Implemented `ContextAssembler` class in `src/cortex/query/context.py`
+- `assemble(results, query, max_tokens, notes)` formats fused results into structured context for Claude
+- Output format: header (query + result count + retrieval methods), then per-result blocks (title, score, source, excerpt, tags, links, created)
+- Truncates excerpts to fit within `max_tokens` budget using ~4 chars/token estimate
+- Annotates superseded notes with `⚠ This note was superseded by: [title] (id: xxx)` warning
+- Accepts optional `notes: dict[str, Note]` for metadata lookup (tags, links, created, supersession)
+- Files: `src/cortex/query/context.py`, `tests/test_query/test_context.py`
+- Tests: 6 new tests, 167 total — all pass (basic assembly, empty results, truncation, superseded annotation, no-notes fallback, budget exhaustion)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

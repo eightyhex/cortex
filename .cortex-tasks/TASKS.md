@@ -344,7 +344,7 @@
 ---
 
 ### Task 6.2 — Context Assembler
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/context.py`
 **Depends on:** Task 6.1
 
