@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 6.3 — QueryPipeline
-**Next task:** Task 7.1 — MCP Server Setup & Capture Tools
-**Session:** 14 of 14
+**Last completed task:** Task 7.1 — MCP Server Setup & Capture Tools
+**Next task:** Task 7.2 — MCP Search & Admin Tools
+**Session:** 15 of 14
 
 ## Completed Tasks
 
@@ -32,6 +32,7 @@
 - Task 6.1 — Reciprocal Rank Fusion ✅
 - Task 6.2 — Context Assembler ✅
 - Task 6.3 — QueryPipeline ✅
+- Task 7.1 — MCP Server Setup & Capture Tools ✅
 
 ## Notes & Decisions
 
@@ -229,6 +230,15 @@
 - Graceful error handling for empty indexes (no FTS index, empty vector store)
 - Files: `src/cortex/query/pipeline.py`, `tests/test_query/test_pipeline.py`
 - Tests: 6 new tests, 173 total — all pass (end-to-end query, status multipliers, explanation includes source systems, empty results, limit respected, ranked result fields)
+
+### 2026-03-15 — Task 7.1 ✅
+- Implemented `FastMCP` server in `src/cortex/mcp/server.py` with `init_server()` for dependency injection
+- Capture tools: `mcp_capture_thought`, `mcp_add_task`, `mcp_save_link`, `mcp_create_note` — all return `{draft_id, preview, target_folder, target_filename}`
+- Draft lifecycle tools: `approve_draft`, `update_draft`, `reject_draft`
+- All capture tool descriptions instruct Claude to show preview and ask for approval before approving
+- Entry point `src/cortex/main.py` — `uv run python -m cortex.main` starts the server via stdio transport
+- Files: `src/cortex/mcp/server.py`, `src/cortex/main.py`, `tests/test_mcp/__init__.py`, `tests/test_mcp/test_server.py`
+- Tests: 18 new tests, 191 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

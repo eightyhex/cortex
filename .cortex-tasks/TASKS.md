@@ -379,7 +379,7 @@
 ## Session 7: FastMCP Server Integration
 
 ### Task 7.1 — MCP Server Setup & Capture Tools
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/mcp/server.py`, `src/cortex/main.py`
 **Depends on:** Task 3.1, 3.3, 3.4
 
