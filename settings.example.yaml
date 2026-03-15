@@ -64,6 +64,22 @@ draft:
   # Auto-cleanup: delete drafts older than N hours
   stale_draft_hours: 24
 
+reranker:
+  # Weight for recency boost (newer notes score higher)
+  recency_weight: 0.15
+
+  # Weight for note type priority (permanent > concept > source > inbox)
+  type_weight: 0.10
+
+  # Weight for inbound link density from knowledge graph
+  link_weight: 0.10
+
+  # Weight for active status boost
+  status_weight: 0.10
+
+  # Half-life in days for recency decay (score halves every N days)
+  recency_halflife_days: 90
+
 # Docker-specific overrides (used by docker-entrypoint.sh)
 # These can be set via environment variables:
 #   CORTEX_VAULT_PATH

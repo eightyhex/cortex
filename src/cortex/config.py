@@ -54,6 +54,14 @@ class DraftConfig(BaseModel):
     stale_draft_hours: int = 24
 
 
+class RerankerConfig(BaseModel):
+    recency_weight: float = 0.15
+    type_weight: float = 0.10
+    link_weight: float = 0.10
+    status_weight: float = 0.10
+    recency_halflife_days: int = 90
+
+
 class McpConfig(BaseModel):
     tool_timeout: int = 30
     max_context_tokens: int = 4000
@@ -82,6 +90,7 @@ class CortexConfig(BaseSettings):
     search: SearchConfig = Field(default_factory=SearchConfig)
     lifecycle: LifecycleConfig = Field(default_factory=LifecycleConfig)
     draft: DraftConfig = Field(default_factory=DraftConfig)
+    reranker: RerankerConfig = Field(default_factory=RerankerConfig)
     mcp: McpConfig = Field(default_factory=McpConfig)
 
     @classmethod

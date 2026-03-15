@@ -505,7 +505,7 @@
 ## Session 10: Heuristic Reranking & Quality Tuning
 
 ### Task 10.1 — Heuristic Reranker
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/query/reranker.py`
 **Depends on:** Task 6.3, 8.1
 

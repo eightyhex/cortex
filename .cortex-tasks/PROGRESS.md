@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 9.2 — Golden Dataset & Eval Harness
-**Next task:** Task 10.1 — Heuristic Reranker
-**Session:** 21 of 14
+**Last completed task:** Task 10.1 — Heuristic Reranker
+**Next task:** Task 10.2 — Pipeline Integration & Eval Run
+**Session:** 22 of 14
 
 ## Completed Tasks
 
@@ -39,6 +39,7 @@
 - Task 8.3 — Graph Integration into QueryPipeline ✅
 - Task 9.1 — Eval Metrics ✅
 - Task 9.2 — Golden Dataset & Eval Harness ✅
+- Task 10.1 — Heuristic Reranker ✅
 
 ## Notes & Decisions
 
@@ -309,6 +310,19 @@
 - `just eval` runs via `uv run python -m pytest evals/ -v`
 - Files: `evals/harness.py`, `evals/golden_dataset.json`, `tests/test_evals/test_harness.py`
 - Tests: 15 new tests, 275 total — all pass
+
+### 2026-03-15 — Task 10.1 ✅
+- Implemented `HeuristicReranker` class in `src/cortex/query/reranker.py`
+- `rerank(results, query, graph)` applies four heuristic boost signals after fusion
+- Recency boost: exponential decay with configurable half-life (default 90 days)
+- Note type priority: permanent(1.0) > concept(0.8) > source(0.6) > project(0.5) > review(0.4) > task(0.3) > daily(0.2) > inbox(0.1)
+- Inbound link density: normalized count from graph (higher = more authoritative)
+- Status boost: active(1.0) > draft(0.5) > archived/superseded(0.0)
+- Added `RerankerConfig` to `src/cortex/config.py` with configurable weights (recency, type, link, status) and halflife
+- Added reranker section to `settings.example.yaml`
+- Metadata fetched from DuckDB lexical index; link counts from NetworkX graph
+- Files: `src/cortex/query/reranker.py`, `src/cortex/config.py`, `settings.example.yaml`, `tests/test_query/test_reranker.py`
+- Tests: 8 new tests, 283 total — all pass (recency boost, type boost, link density boost, status penalty, empty results, configurable weights, scores always increase, no-graph fallback)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
