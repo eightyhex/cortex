@@ -225,6 +225,33 @@ class DraftManager:
         self.reject_draft(draft_id)
         return note
 
+    def check_draft_freshness(self, draft_id: str, vault) -> bool:
+        """Check if an edit draft is still fresh (underlying note not modified externally).
+
+        Returns True if the draft is still valid (note unchanged since draft creation).
+        Returns False if the underlying note was modified after the draft was created,
+        meaning the draft is stale and should be discarded.
+
+        Non-edit drafts (no _edit_note_id) are always considered fresh.
+        """
+        draft = self.get_draft(draft_id)
+        note_id = draft.frontmatter.get("_edit_note_id")
+        if not note_id:
+            return True  # Not an edit draft — always fresh
+
+        try:
+            note = vault.get_note(note_id)
+        except (KeyError, FileNotFoundError):
+            return False  # Note was deleted — draft is stale
+
+        draft_created = datetime.fromisoformat(draft.created_at)
+        if note.modified > draft_created:
+            # Note was modified after draft creation — discard the stale draft
+            self.reject_draft(draft_id)
+            return False
+
+        return True
+
     def reject_draft(self, draft_id: str) -> None:
         """Discard a draft. Deletes the draft file."""
         path = self._drafts_dir / f"{draft_id}.json"

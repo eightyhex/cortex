@@ -673,7 +673,7 @@
 ---
 
 ### Task 13.2 — Incremental Index Updates & Draft Conflict Resolution
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/index/manager.py` (extend), `src/cortex/capture/draft.py` (extend)
 **Depends on:** Task 13.1, 3.1
 

@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 13.1 — File Watcher
-**Next task:** Task 13.2 — Incremental Index Updates & Draft Conflict Resolution
-**Session:** 31 of 14
+**Last completed task:** Task 13.2 — Incremental Index Updates & Draft Conflict Resolution
+**Next task:** Task 14.1 — Health Check & Error Handling
+**Session:** 32 of 14
 
 ## Completed Tasks
 
@@ -49,6 +49,7 @@
 - Task 12.2 — Review Generation Workflow ✅
 - Task 12.3 — Source Summarization & Staleness Review ✅
 - Task 13.1 — File Watcher ✅
+- Task 13.2 — Incremental Index Updates & Draft Conflict Resolution ✅
 
 ## Notes & Decisions
 
@@ -419,6 +420,16 @@
 - Debouncing: rapid saves to same file only trigger one reindex
 - Files: `src/cortex/vault/watcher.py`, `tests/test_vault/test_watcher.py`
 - Tests: 12 new tests, 376 total — all pass (create event, modify event, delete event, delete unknown, debounce rapid, debounce different files, ignore non-md, ignore temp, ignore .obsidian, ignore _templates, accept normal md, start/stop)
+
+### 2026-03-15 — Task 13.2 ✅
+- Implemented no-op optimization in `IndexManager.reindex_note` using SHA-256 content hashing
+- Hash covers: content, title, status, tags, modified timestamp — skips reindex when unchanged
+- Implemented `DraftManager.check_draft_freshness(draft_id, vault)` — returns False if underlying note was modified after draft creation
+- Stale edit drafts are auto-discarded (draft file deleted) when freshness check fails
+- Non-edit drafts (no `_edit_note_id`) are always considered fresh
+- Deleted notes cause edit drafts to be marked stale
+- Files: `src/cortex/index/manager.py`, `src/cortex/capture/draft.py`, `tests/test_capture/test_draft_conflict.py`
+- Tests: 8 new tests (4 reindex no-op + 4 draft freshness), 384 total — all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
