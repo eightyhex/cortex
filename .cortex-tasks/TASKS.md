@@ -237,7 +237,7 @@
 ---
 
 ### Task 4.2 — IndexManager Skeleton
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/manager.py`
 **Depends on:** Task 4.1
 

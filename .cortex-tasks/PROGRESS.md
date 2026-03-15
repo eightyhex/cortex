@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 4.1 — LexicalIndex Core
-**Next task:** Task 4.2 — IndexManager Skeleton
+**Last completed task:** Task 4.2 — IndexManager Skeleton
+**Next task:** Task 5.1 — Embedding Model Wrapper
 **Session:** 7 of 14
 
 ## Completed Tasks
@@ -24,6 +24,7 @@
 - Task 3.3 — Capture Commands ✅
 - Task 3.4 — DraftManager.approve_draft Integration ✅
 - Task 4.1 — LexicalIndex Core ✅
+- Task 4.2 — IndexManager Skeleton ✅
 
 ## Notes & Decisions
 
@@ -133,6 +134,16 @@
 - Calls `vault.create_note(draft)` to write the .md file, then deletes the draft JSON
 - Files: `src/cortex/capture/draft.py`, `tests/test_capture/test_approve.py`
 - Tests: 4 new tests, 108 total — all pass (approve creates file, approve deletes draft, approve returns valid Note, nonexistent draft raises)
+
+### 2026-03-15 — Task 4.2 ✅
+- Implemented `IndexManager` class in `src/cortex/index/manager.py`
+- `__init__(config)` — initializes LexicalIndex with db_path derived from config
+- `index_note(note)` — delegates to lexical index
+- `remove_note(note_id)` — delegates to lexical index
+- `reindex_note(note)` — remove + re-add
+- `rebuild_all(notes)` — full rebuild delegation
+- Files: `src/cortex/index/manager.py`, `tests/test_index/test_manager.py`
+- Tests: 4 new tests, 129 total — all pass (index+search, remove, reindex, rebuild_all)
 
 ### 2026-03-15 — Task 4.1 ✅
 - Implemented `LexicalIndex` class in `src/cortex/index/lexical.py` with DuckDB-backed full-text search
