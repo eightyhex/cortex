@@ -291,7 +291,7 @@
 ---
 
 ### Task 5.3 — SemanticIndex (LanceDB)
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/semantic.py`
 **Depends on:** Task 5.1, 5.2
 

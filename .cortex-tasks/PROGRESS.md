@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 5.2 — Semantic Boundary Chunker
-**Next task:** Task 5.3 — SemanticIndex (LanceDB)
-**Session:** 9 of 14
+**Last completed task:** Task 5.3 — SemanticIndex (LanceDB)
+**Next task:** Task 5.4 — IndexManager Integration with SemanticIndex
+**Session:** 10 of 14
 
 ## Completed Tasks
 
@@ -27,6 +27,7 @@
 - Task 4.2 — IndexManager Skeleton ✅
 - Task 5.1 — Embedding Model Wrapper ✅
 - Task 5.2 — Semantic Boundary Chunker ✅
+- Task 5.3 — SemanticIndex (LanceDB) ✅
 
 ## Notes & Decisions
 
@@ -176,6 +177,17 @@
 - Chunk ID format: `{note_id}__chunk_{N}`
 - Files: `src/cortex/index/chunker.py`, `tests/test_index/test_chunker.py`
 - Tests: 8 new tests, 144 total — all pass (short note, long note, paragraph split, sentence split, token counting, chunk ID format, empty content, merging small paragraphs)
+
+### 2026-03-15 — Task 5.3 ✅
+- Implemented `SemanticIndex` class in `src/cortex/index/semantic.py` backed by LanceDB
+- `__init__(db_path, model)` — creates/opens LanceDB, creates `chunks` table with PyArrow schema
+- `index_note(note)` — chunks via `chunk_note()`, embeds via `EmbeddingModel.embed_batch()`, stores in LanceDB
+- `remove_note(note_id)` — deletes all chunks for a note
+- `rebuild(notes)` — drops and recreates table, re-indexes all notes
+- `search(query, limit)` — embeds query, cosine similarity search, deduplicates by note_id (keeps highest-scoring chunk)
+- LanceDB schema: id, note_id, title, note_type, text, vector (768-dim float32), tags, created
+- Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
+- Tests: 7 new tests, 151 total — all pass (index+search, empty index, remove, rebuild, semantic relevance, upsert on reindex, result fields)
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅
