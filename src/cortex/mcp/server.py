@@ -325,6 +325,7 @@ def search_vault(
                 note = vault.get_note(r.note_id)
                 entry["created"] = note.created.isoformat()
                 entry["modified"] = note.modified.isoformat()
+                entry["tags"] = note.tags
                 source_url = note.frontmatter.get("source_url")
                 if source_url:
                     entry["source_url"] = source_url

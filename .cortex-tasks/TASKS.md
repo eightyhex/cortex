@@ -889,7 +889,7 @@
 ---
 
 ### Task 16.4 — Include Tags in search_vault Results
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/mcp/server.py`
 **Depends on:** Task 15.7
 

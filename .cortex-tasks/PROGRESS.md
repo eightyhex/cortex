@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.3 — Increase Snippet Length for Graph Search Results
-**Next task:** Task 16.4 — Include Tags in search_vault Results
+**Last completed task:** Task 16.4 — Include Tags in search_vault Results
+**Next task:** Task 16.5 — Include Tags in RankedResult for Context Assembly
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,13 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.4 ✅
+- Added `"tags": note.tags` to enriched search results in `search_vault` MCP tool
+- Tags are `list[str]`, absent when vault lookup fails (consistent with created/modified)
+- New test: `test_search_results_include_tags` verifies tags are present and are a list of strings
+- Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
+- Tests: 26 search admin tests, all pass
 
 ### 2026-03-15 — Task 16.3 ✅
 - Changed `note.content[:200]` to `note.content[:1000]` in `graph_search()` at `queries.py:128`

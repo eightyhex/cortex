@@ -247,6 +247,17 @@ class TestSearchVault:
         assert "error" not in result
         assert result["total"] >= 1
 
+    def test_search_results_include_tags(self, server, sample_notes):
+        """Search results include tags as a list[str] when vault is available."""
+        result = search_vault(query="Python")
+        assert result["total"] >= 1
+        # Find the note with known tags
+        tagged = [r for r in result["results"] if r.get("tags")]
+        assert len(tagged) >= 1
+        for r in tagged:
+            assert isinstance(r["tags"], list)
+            assert all(isinstance(t, str) for t in r["tags"])
+
 
 # ---------------------------------------------------------------------------
 # get_note
