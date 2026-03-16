@@ -267,6 +267,7 @@ def search_vault(
     query: str,
     limit: int = 10,
     note_type: str | None = None,
+    include_content: int = 3,
 ) -> dict:
     """Search the vault using hybrid retrieval (lexical + semantic).
 
@@ -311,7 +312,7 @@ def search_vault(
 
     # Enrich results with dates from vault
     enriched = []
-    for r in results:
+    for i, r in enumerate(results):
         entry = {
             "note_id": r.note_id,
             "title": r.title,
@@ -329,6 +330,8 @@ def search_vault(
                 source_url = note.frontmatter.get("source_url")
                 if source_url:
                     entry["source_url"] = source_url
+                if i < include_content:
+                    entry["content"] = note.content
             except (KeyError, FileNotFoundError):
                 pass
         enriched.append(entry)

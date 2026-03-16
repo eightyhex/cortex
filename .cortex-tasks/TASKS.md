@@ -921,7 +921,7 @@
 ---
 
 ### Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/mcp/server.py`
 **Depends on:** Task 16.1, 16.2, 16.3
 

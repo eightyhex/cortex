@@ -258,6 +258,23 @@ class TestSearchVault:
             assert isinstance(r["tags"], list)
             assert all(isinstance(t, str) for t in r["tags"])
 
+    def test_search_includes_full_content_for_top_results(self, server, sample_notes):
+        """Top include_content results have full content, remaining do not."""
+        result = search_vault(query="Python testing review", include_content=2)
+        assert result["total"] >= 2
+        # First 2 results should have 'content'
+        for r in result["results"][:2]:
+            assert "content" in r
+        # Results beyond 2 should not have 'content'
+        for r in result["results"][2:]:
+            assert "content" not in r
+
+    def test_search_include_content_zero(self, server, sample_notes):
+        """When include_content=0, no results have content."""
+        result = search_vault(query="Python", include_content=0)
+        for r in result["results"]:
+            assert "content" not in r
+
 
 # ---------------------------------------------------------------------------
 # get_note

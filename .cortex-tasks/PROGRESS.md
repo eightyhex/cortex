@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.5 — Include Tags in RankedResult for Context Assembly
-**Next task:** Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
+**Last completed task:** Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
+**Next task:** Task 16.7 — Increase Context Assembly Token Budget
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,14 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.6 ✅
+- Added `include_content: int = 3` parameter to `search_vault` MCP tool
+- Top `include_content` results include `"content": note.content` (full markdown body)
+- Results beyond `include_content` omit the `content` field; `include_content=0` opts out entirely
+- New tests: `test_search_includes_full_content_for_top_results`, `test_search_include_content_zero`
+- Files: `src/cortex/mcp/server.py`, `tests/test_mcp/test_search_admin.py`
+- Tests: 28 search admin tests, all pass
 
 ### 2026-03-15 — Task 16.5 ✅
 - Added `tags: list[str]` field to `RankedResult` dataclass in `pipeline.py`
