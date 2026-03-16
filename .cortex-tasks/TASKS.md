@@ -940,7 +940,7 @@
 ---
 
 ### Task 16.7 — Increase Context Assembly Token Budget
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/config.py`, `src/cortex/query/context.py`, `src/cortex/query/pipeline.py`
 **Depends on:** Task 16.1, 16.2, 16.3
 

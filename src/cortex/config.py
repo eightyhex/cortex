@@ -64,7 +64,7 @@ class RerankerConfig(BaseModel):
 
 class McpConfig(BaseModel):
     tool_timeout: int = 30
-    max_context_tokens: int = 4000
+    max_context_tokens: int = 8000
 
 
 def _load_yaml_settings() -> dict[str, Any]:

@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
-**Next task:** Task 16.7 — Increase Context Assembly Token Budget
+**Last completed task:** Task 16.7 — Increase Context Assembly Token Budget
+**Next task:** Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,14 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.7 ✅
+- Changed `McpConfig.max_context_tokens` default from 4000 to 8000 in `config.py`
+- Added `max_context_tokens` parameter to `QueryPipeline.__init__`, passed to `ContextAssembler.assemble()`
+- `search_vault` now passes `config.mcp.max_context_tokens` to `QueryPipeline`
+- New test: `test_pipeline_respects_max_context_tokens` verifies small budget produces shorter context
+- Files: `src/cortex/config.py`, `src/cortex/query/pipeline.py`, `src/cortex/mcp/server.py`, `tests/test_query/test_pipeline.py`
+- Tests: 10 pipeline tests, all pass
 
 ### 2026-03-15 — Task 16.6 ✅
 - Added `include_content: int = 3` parameter to `search_vault` MCP tool

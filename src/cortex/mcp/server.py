@@ -296,6 +296,7 @@ def search_vault(
         graph=graph,
         reranker_config=config.reranker,
         vault=vault,
+        max_context_tokens=config.mcp.max_context_tokens,
     )
 
     try:

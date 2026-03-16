@@ -51,11 +51,13 @@ class QueryPipeline:
         graph: GraphManager | None = None,
         reranker_config: RerankerConfig | None = None,
         vault: VaultManager | None = None,
+        max_context_tokens: int = 8000,
     ) -> None:
         self._lexical = lexical
         self._semantic = semantic
         self._graph = graph
         self._vault = vault
+        self._max_context_tokens = max_context_tokens
         self._assembler = ContextAssembler()
         from cortex.query.reranker import HeuristicReranker
 
@@ -148,7 +150,7 @@ class QueryPipeline:
             if note:
                 r.tags = list(note.tags)
 
-        context = self._assembler.assemble(fused_for_context, query, notes=notes)
+        context = self._assembler.assemble(fused_for_context, query, max_tokens=self._max_context_tokens, notes=notes)
 
         return QueryResult(
             query=query,

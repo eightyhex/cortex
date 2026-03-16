@@ -297,3 +297,29 @@ class TestQueryPipeline:
         assert "python" in tagged[0].tags
         assert "testing" in tagged[0].tags
         assert "automation" in tagged[0].tags
+
+    def test_pipeline_respects_max_context_tokens(self, tmp_indexes):
+        """Pipeline uses max_context_tokens to control context assembly budget."""
+        lexical, semantic = tmp_indexes
+
+        # Create notes with long content to ensure truncation happens
+        long_notes = [
+            _make_note(
+                f"note-long-{i}",
+                f"Long Note {i}",
+                f"Content block {i}. " * 200,  # ~3600 chars each
+            )
+            for i in range(5)
+        ]
+        for note in long_notes:
+            lexical.index_note(note)
+            semantic.index_note(note)
+
+        # Very small budget should produce shorter context than large budget
+        small_pipeline = QueryPipeline(lexical, semantic, max_context_tokens=100)
+        small_result = asyncio.run(small_pipeline.execute("content block"))
+
+        large_pipeline = QueryPipeline(lexical, semantic, max_context_tokens=8000)
+        large_result = asyncio.run(large_pipeline.execute("content block"))
+
+        assert len(small_result.context) < len(large_result.context)
