@@ -230,7 +230,7 @@ class TestGraphSearch:
         for folder in ["20-concepts"]:
             (vault_path / folder).mkdir()
 
-        long_content = "A" * 300
+        long_content = "A" * 1200
         notes = []
         for nid, title, content in [
             ("aaa", "Note A", "Content of note A"),
@@ -257,10 +257,10 @@ class TestGraphSearch:
 
         results = graph_search(graph, ["aaa"], depth=1, vault=vault)
         by_id = {r.note_id: r for r in results}
-        # bbb should have a snippet truncated to 200 chars
+        # bbb should have a snippet truncated to 1000 chars
         assert "bbb" in by_id
-        assert len(by_id["bbb"].snippet) == 200
-        assert by_id["bbb"].snippet == long_content[:200]
+        assert len(by_id["bbb"].snippet) == 1000
+        assert by_id["bbb"].snippet == long_content[:1000]
 
     def test_without_vault_empty_snippets(self) -> None:
         """Without vault, snippets remain empty (no regression)."""

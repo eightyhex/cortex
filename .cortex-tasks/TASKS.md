@@ -874,7 +874,7 @@
 ---
 
 ### Task 16.3 — Increase Snippet Length for Graph Search Results
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/graph/queries.py`
 **Depends on:** Task 15.5
 

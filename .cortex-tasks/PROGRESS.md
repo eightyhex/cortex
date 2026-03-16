@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.2 — Increase Snippet Length for Lexical Search Results
-**Next task:** Task 16.3 — Increase Snippet Length for Graph Search Results
-**Session:** 21
+**Last completed task:** Task 16.3 — Increase Snippet Length for Graph Search Results
+**Next task:** Task 16.4 — Include Tags in search_vault Results
+**Session:** 22
 
 ## Completed Tasks
 
@@ -535,6 +535,13 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.3 ✅
+- Changed `note.content[:200]` to `note.content[:1000]` in `graph_search()` at `queries.py:128`
+- Graph search now returns up to 1000 characters in `SearchResult.snippet`, consistent with lexical search
+- Updated test `test_with_vault_populates_snippets` to use 1200-char content and assert 1000-char truncation
+- Files: `src/cortex/graph/queries.py`, `tests/test_graph/test_queries.py`
+- Tests: 20 graph query tests, all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

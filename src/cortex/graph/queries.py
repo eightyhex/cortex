@@ -125,7 +125,7 @@ def graph_search(
                 try:
                     note = vault.get_note(dst)
                     if note and note.content:
-                        snippet = note.content[:200]
+                        snippet = note.content[:1000]
                 except Exception:
                     pass
 
