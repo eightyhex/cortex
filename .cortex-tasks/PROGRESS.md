@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.1 — Increase Snippet Length for Semantic Search Results
-**Next task:** Task 16.2 — Increase Snippet Length for Lexical Search Results
-**Session:** 20
+**Last completed task:** Task 16.2 — Increase Snippet Length for Lexical Search Results
+**Next task:** Task 16.3 — Increase Snippet Length for Graph Search Results
+**Session:** 21
 
 ## Completed Tasks
 
@@ -60,6 +60,7 @@
 - Task 15.6 — Ensure Reranker Handles Notes from All Search Sources ✅
 - Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired ✅
 - Task 16.1 — Increase Snippet Length for Semantic Search Results ✅
+- Task 16.2 — Increase Snippet Length for Lexical Search Results ✅
 
 ## Notes & Decisions
 
@@ -527,6 +528,13 @@
 - New test: `test_semantic_snippet_returns_full_chunk_text` verifies snippet > 200 chars and matches full content
 - Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
 - Tests: 10 semantic tests, all pass
+
+### 2026-03-15 — Task 16.2 ✅
+- Changed `content[:200]` to `content[:1000]` in `LexicalIndex.search()` at `lexical.py:204`
+- Lexical search now returns up to 1000 characters in `SearchResult.snippet`
+- New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
+- Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
+- Tests: 18 lexical tests, all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

@@ -200,8 +200,8 @@ class LexicalIndex:
         results = []
         for row in rows:
             note_id, title, score, content, note_type, path = row
-            # Generate a snippet (first 200 chars of content)
-            snippet = content[:200].strip() if content else ""
+            # Generate a snippet (first 1000 chars of content)
+            snippet = content[:1000].strip() if content else ""
             results.append(
                 SearchResult(
                     note_id=note_id,

@@ -220,6 +220,33 @@ class TestSearch:
         assert len(py_results[0].snippet) > 0
 
 
+    def test_lexical_snippet_returns_up_to_1000_chars(self, index):
+        """Snippet should return up to 1000 chars for long content, full content for short."""
+        long_content = "knowledge " * 200  # 2000 chars
+        long_note = _make_note(
+            note_id="long-1",
+            title="Long Note",
+            content=long_content.strip(),
+        )
+        index.index_note(long_note)
+        results = index.search("knowledge")
+        assert len(results) == 1
+        assert len(results[0].snippet) <= 1000
+        assert len(results[0].snippet) > 200  # much longer than old 200-char limit
+
+        short_content = "Short content about a specific topic."
+        short_note = _make_note(
+            note_id="short-1",
+            title="Short Note",
+            content=short_content,
+        )
+        index.index_note(short_note)
+        results = index.search("Short specific topic")
+        short_results = [r for r in results if r.note_id == "short-1"]
+        assert len(short_results) == 1
+        assert short_results[0].snippet == short_content
+
+
 class TestBM25Ranking:
     def test_more_relevant_note_ranks_higher(self, index):
         """A note with the search term in both title and content should rank higher."""

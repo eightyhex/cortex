@@ -859,7 +859,7 @@
 ---
 
 ### Task 16.2 — Increase Snippet Length for Lexical Search Results
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/lexical.py`
 **Depends on:** Task 15.7
 
