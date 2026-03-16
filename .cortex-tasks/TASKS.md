@@ -958,7 +958,7 @@
 ---
 
 ### Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
-**Status:** `pending`
+**Status:** `done`
 **File:** `src/cortex/index/semantic.py`
 **Depends on:** Task 16.1
 

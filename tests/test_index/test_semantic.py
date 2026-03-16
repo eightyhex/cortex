@@ -216,3 +216,28 @@ class TestSemanticIndex:
         assert r.note_id == "long1"
         assert len(r.snippet) > 200
         assert r.snippet == long_content
+
+    def test_search_multi_chunk_returns_multiple_chunks_per_note(self, semantic_index):
+        """With multi_chunk=True, multiple chunks from the same note are returned."""
+        # Create a note long enough to produce 3+ chunks
+        paragraphs = [
+            f"Paragraph {i}: " + "Machine learning techniques are used in many applications. " * 30
+            for i in range(5)
+        ]
+        long_content = "\n\n".join(paragraphs)
+        note = _make_note("multi1", "Multi Chunk Note", long_content)
+        semantic_index.index_note(note)
+
+        # Default (multi_chunk=False) should deduplicate to 1 result
+        results_dedup = semantic_index.search("machine learning techniques", limit=10)
+        note_ids_dedup = [r.note_id for r in results_dedup]
+        assert note_ids_dedup.count("multi1") == 1
+
+        # multi_chunk=True should return multiple chunks from the same note
+        results_multi = semantic_index.search("machine learning techniques", limit=10, multi_chunk=True)
+        note_ids_multi = [r.note_id for r in results_multi]
+        assert note_ids_multi.count("multi1") > 1
+
+        # Each chunk should have different snippet content
+        snippets = [r.snippet for r in results_multi if r.note_id == "multi1"]
+        assert len(set(snippets)) > 1

@@ -131,7 +131,7 @@ class SemanticIndex:
         for note in notes:
             self.index_note(note)
 
-    def search(self, query: str, limit: int = 20) -> list[SearchResult]:
+    def search(self, query: str, limit: int = 20, multi_chunk: bool = False) -> list[SearchResult]:
         """Embed query and perform cosine similarity search."""
         query_vector = self._model.embed(query)
 
@@ -141,32 +141,47 @@ class SemanticIndex:
         if table.count_rows() == 0:
             return []
 
+        # Fetch more rows when multi_chunk to have enough chunks per note
+        fetch_limit = limit * 3 if multi_chunk else limit
         results_raw = (
             table.search(query_vector)
             .metric("cosine")
-            .limit(limit)
+            .limit(fetch_limit)
             .to_list()
         )
+
+        def _make_result(row: dict) -> SearchResult:
+            score = 1.0 - row["_distance"]
+            return SearchResult(
+                note_id=row["note_id"],
+                title=row["title"],
+                score=score,
+                snippet=row["text"],
+                note_type=row["note_type"],
+                path=row.get("path", ""),
+                status=row.get("status", ""),
+                modified=row.get("modified", ""),
+                supersedes=row.get("supersedes", ""),
+                superseded_by=row.get("superseded_by", ""),
+            )
+
+        if multi_chunk:
+            # Return up to 3 chunks per note, sorted by score desc within each note
+            from collections import defaultdict
+            chunks_by_note: dict[str, list[SearchResult]] = defaultdict(list)
+            for row in results_raw:
+                result = _make_result(row)
+                if len(chunks_by_note[result.note_id]) < 3:
+                    chunks_by_note[result.note_id].append(result)
+            all_chunks = [r for chunks in chunks_by_note.values() for r in chunks]
+            all_chunks.sort(key=lambda r: r.score, reverse=True)
+            return all_chunks[:limit]
 
         # Deduplicate by note_id — keep highest scoring chunk per note
         seen: dict[str, SearchResult] = {}
         for row in results_raw:
-            note_id = row["note_id"]
-            # LanceDB cosine distance: lower = more similar.
-            # Convert to a similarity score (1 - distance).
-            score = 1.0 - row["_distance"]
-            if note_id not in seen or score > seen[note_id].score:
-                seen[note_id] = SearchResult(
-                    note_id=note_id,
-                    title=row["title"],
-                    score=score,
-                    snippet=row["text"],
-                    note_type=row["note_type"],
-                    path=row.get("path", ""),
-                    status=row.get("status", ""),
-                    modified=row.get("modified", ""),
-                    supersedes=row.get("supersedes", ""),
-                    superseded_by=row.get("superseded_by", ""),
-                )
+            result = _make_result(row)
+            if result.note_id not in seen or result.score > seen[result.note_id].score:
+                seen[result.note_id] = result
 
         return sorted(seen.values(), key=lambda r: r.score, reverse=True)

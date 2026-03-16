@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.7 — Increase Context Assembly Token Budget
-**Next task:** Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
+**Last completed task:** Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
+**Next task:** Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,15 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.8 ✅
+- Added `multi_chunk: bool = False` parameter to `SemanticIndex.search()`
+- When `multi_chunk=True`, returns up to 3 chunks per note (sorted by score), capped by overall `limit`
+- Default behavior unchanged (deduplicate by note_id, keep highest-scoring chunk)
+- Refactored row-to-SearchResult conversion into `_make_result()` helper
+- New test: `test_search_multi_chunk_returns_multiple_chunks_per_note`
+- Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
+- Tests: 11 semantic tests, all pass
 
 ### 2026-03-15 — Task 16.7 ✅
 - Changed `McpConfig.max_context_tokens` default from 4000 to 8000 in `config.py`
