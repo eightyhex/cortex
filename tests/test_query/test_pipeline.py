@@ -255,3 +255,45 @@ class TestQueryPipeline:
         # note_b should have "graph" in matched_by
         note_b_result = next(r for r in result.results if r.note_id == "note-b")
         assert "graph" in note_b_result.matched_by
+
+    def test_ranked_results_include_tags(self, tmp_indexes, tmp_path):
+        """RankedResult.tags is populated from vault notes."""
+        from cortex.vault.manager import VaultManager, scaffold_vault
+
+        lexical, semantic = tmp_indexes
+
+        vault_path = tmp_path / "vault"
+        scaffold_vault(vault_path)
+
+        # Create a note with tags in the vault
+        note_file = vault_path / "20-concepts" / "tagged.md"
+        note_file.write_text(
+            "---\nid: note-tagged\ntitle: Tagged Note\ntype: concept\n"
+            "tags: [python, testing, automation]\nstatus: active\n---\n\n"
+            "This note has tags for testing the pipeline.\n",
+            encoding="utf-8",
+        )
+
+        config = CortexConfig(
+            vault={"path": str(vault_path)},
+            index={
+                "db_path": str(tmp_path / "tags.duckdb"),
+                "embeddings_path": str(tmp_path / "tags_emb"),
+            },
+        )
+        vault = VaultManager(vault_path, config)
+        notes = vault.scan_vault()
+
+        for note in notes:
+            lexical.index_note(note)
+            semantic.index_note(note)
+
+        pipeline = QueryPipeline(lexical, semantic, vault=vault)
+        result = asyncio.run(pipeline.execute("tagged note python testing"))
+
+        tagged = [r for r in result.results if r.note_id == "note-tagged"]
+        assert len(tagged) == 1
+        assert isinstance(tagged[0].tags, list)
+        assert "python" in tagged[0].tags
+        assert "testing" in tagged[0].tags
+        assert "automation" in tagged[0].tags

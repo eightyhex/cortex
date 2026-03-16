@@ -28,6 +28,7 @@ class RankedResult:
     matched_by: list[str] = field(default_factory=list)
     snippet: str = ""
     note_type: str = ""
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -140,6 +141,12 @@ class QueryPipeline:
                     notes[r.note_id] = self._vault.get_note(r.note_id)
                 except (KeyError, FileNotFoundError):
                     pass
+
+        # Populate tags on RankedResults from vault notes
+        for r in ranked:
+            note = notes.get(r.note_id)
+            if note:
+                r.tags = list(note.tags)
 
         context = self._assembler.assemble(fused_for_context, query, notes=notes)
 

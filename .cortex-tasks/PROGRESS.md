@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.4 — Include Tags in search_vault Results
-**Next task:** Task 16.5 — Include Tags in RankedResult for Context Assembly
+**Last completed task:** Task 16.5 — Include Tags in RankedResult for Context Assembly
+**Next task:** Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,14 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.5 ✅
+- Added `tags: list[str]` field to `RankedResult` dataclass in `pipeline.py`
+- `QueryPipeline.execute()` populates `tags` from vault note lookup
+- `ContextAssembler.assemble()` uses `result.tags` as fallback when notes dict is missing
+- New test: `test_ranked_results_include_tags` verifies tags populated from vault
+- Files: `src/cortex/query/pipeline.py`, `src/cortex/query/context.py`, `tests/test_query/test_pipeline.py`
+- Tests: 9 pipeline tests, all pass
 
 ### 2026-03-15 — Task 16.4 ✅
 - Added `"tags": note.tags` to enriched search results in `search_vault` MCP tool

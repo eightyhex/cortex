@@ -56,7 +56,13 @@ class ContextAssembler:
             note = notes.get(result.note_id)
 
             # Build metadata line
-            tags_str = ", ".join(note.tags) if note and note.tags else "none"
+            result_tags = getattr(result, "tags", None)
+            if note and note.tags:
+                tags_str = ", ".join(note.tags)
+            elif result_tags:
+                tags_str = ", ".join(result_tags)
+            else:
+                tags_str = "none"
             links_str = (
                 ", ".join(link.target_title for link in note.links)
                 if note and note.links

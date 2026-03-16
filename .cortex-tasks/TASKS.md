@@ -905,7 +905,7 @@
 ---
 
 ### Task 16.5 — Include Tags in RankedResult for Context Assembly
-**Status:** `pending`
+**Status:** `done`
 **Files:** `src/cortex/query/pipeline.py`, `src/cortex/query/context.py`
 **Depends on:** Task 16.4
 
