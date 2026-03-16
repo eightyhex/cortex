@@ -32,7 +32,7 @@ Design documents for Cortex — a local-first, AI-native second brain built on O
 
 ### 03-CRITICAL_DECISIONS.md
 **Critical evaluation and decision rationale.** Documents key trade-offs:
-- Why stdio MCP transport (not HTTP)
+- Why streamable-http MCP transport (single server, multi-client)
 - Why three indexes (DuckDB + LanceDB + NetworkX)
 - Why sentence-transformers `nomic-embed-text` (not API-based embeddings)
 - Why Docker as primary deployment

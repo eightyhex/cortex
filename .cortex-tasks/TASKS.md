@@ -994,4 +994,13 @@
 
 ---
 
-*End of Task Plan — 51 atomic tasks across 16 sessions*
+*51 tasks completed across 16 sessions. Add new sessions below.*
+
+---
+
+<!-- To add new tasks:
+1. Create a new session header: ## Session N: <Title>
+2. Add tasks as ### Task N.X — <Name> with Status: `pending`
+3. Include: Description, File(s), Depends on (if any), Acceptance Criteria (checkboxes)
+4. Update PROGRESS.md "Next task" to point to the first new pending task
+-->

@@ -10,6 +10,7 @@ from cortex.main import main
 class TestMain:
     """Verify that main() wires up all subsystems before starting the server."""
 
+    @patch("sys.argv", ["cortex"])
     @patch("cortex.main.CortexConfig")
     @patch("cortex.main.IndexManager")
     @patch("cortex.main.GraphManager")
@@ -37,9 +38,31 @@ class TestMain:
         mock_init_server.assert_called_once_with(
             config=mock_config, index=mock_index, graph=mock_graph
         )
-        # Server started
+        # Server started in stdio mode by default
         mock_server.run.assert_called_once_with(transport="stdio")
 
+    @patch("sys.argv", ["cortex", "--http", "--port", "9000"])
+    @patch("cortex.main.CortexConfig")
+    @patch("cortex.main.IndexManager")
+    @patch("cortex.main.GraphManager")
+    @patch("cortex.main.init_server")
+    def test_main_http_mode(
+        self, mock_init_server, mock_graph_cls, mock_index_cls, mock_config_cls
+    ):
+        """main() with --http runs streamable-http transport."""
+        mock_config_cls.return_value = MagicMock()
+        mock_index_cls.return_value = MagicMock()
+        mock_graph_cls.return_value = MagicMock()
+        mock_server = MagicMock()
+        mock_init_server.return_value = mock_server
+
+        main()
+
+        mock_server.run.assert_called_once_with(
+            transport="streamable-http", host="127.0.0.1", port=9000
+        )
+
+    @patch("sys.argv", ["cortex"])
     @patch("cortex.main.CortexConfig")
     @patch("cortex.main.IndexManager")
     @patch("cortex.main.GraphManager")

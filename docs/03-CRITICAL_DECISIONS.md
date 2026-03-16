@@ -35,22 +35,24 @@ This is an ambitious, well-structured project with solid fundamentals. The PRD a
 
 **Problem:** The TDD uses FastAPI as the MCP server backbone. Claude Code expects a stdio-based MCP server, not an HTTP server. FastAPI adds unnecessary process management, startup ordering, port conflicts, and health checks.
 
-**Decision: Use FastMCP 3.x with stdio transport + uv for project management** ✅
+**Decision: Use FastMCP 3.x with streamable-http transport + uv for project management** ✅
 
-- FastMCP provides decorator-based tool registration, automatic schema generation, and built-in stdio transport
-- `fastmcp install claude-code server.py` auto-configures Claude Code
+- FastMCP provides decorator-based tool registration, automatic schema generation, and built-in streamable-http transport
 - `uv` for all dependency management and project tooling (replaces pip, virtualenv)
-- No FastAPI, no uvicorn, no port config
-- HTTP transport can be added later via FastMCP's SSE/streamable HTTP if a web UI is needed
+- No FastAPI needed — FastMCP's built-in uvicorn serves the HTTP endpoint
+- Single server process on `127.0.0.1:8757` shared by all clients (Claude Code, Claude Desktop)
+- `cortex install` CLI command configures everything: LaunchAgent + Claude Code + Claude Desktop
+- `cortex restart` picks up code changes after development
+- Falls back to stdio mode (`cortex stdio`) for single-client/Docker use
+
+**Why streamable-http over stdio?** The original design used stdio (one process per client). This caused DuckDB lock conflicts when Claude Code and Claude Desktop both connected simultaneously, since each spawned its own server process. Streamable-http runs a single server that multiple clients connect to over HTTP, eliminating lock conflicts and reducing resource usage.
 
 **TDD changes required:**
 - Tech stack: replace `FastAPI` + `uvicorn` with `FastMCP 3.x`; add `uv` as project manager
-- Architecture diagram: "MCP Server (FastAPI)" → "MCP Server (FastMCP/stdio)"
-- `settings.yaml`: remove `server.host` and `server.port`
-- `main.py`: becomes FastMCP server entry point
-- Session 7: focus on FastMCP tool registration, not HTTP routes
-- `pyproject.toml`: managed by `uv`; replace `pip install` commands with `uv` equivalents
-- `justfile`: commands use `uv run` instead of direct python
+- Architecture diagram: "MCP Server (FastAPI)" → "MCP Server (FastMCP/streamable-http)"
+- `cli.py`: CLI with `serve`, `stdio`, `install`, `uninstall`, `restart`, `status` commands
+- `pyproject.toml`: `[project.scripts]` entry for `cortex` CLI; managed by `uv`
+- LaunchAgent (`com.cortex.mcp-server`) auto-starts server on login with `KeepAlive`
 
 ---
 
@@ -346,7 +348,7 @@ This is an ambitious, well-structured project with solid fundamentals. The PRD a
 
 | # | Issue | Original Recommendation | Decision | Status |
 |---|-------|------------------------|----------|--------|
-| 1 | FastAPI MCP server | Use mcp SDK with stdio | **FastMCP 3.x + stdio + uv** | ✅ Decided |
+| 1 | FastAPI MCP server | Use mcp SDK with stdio | **FastMCP 3.x + streamable-http + uv** | ✅ Decided |
 | 2 | NetworkX + pickle | SQLite for graph | **NetworkX + GraphML** | ✅ Decided |
 | 3 | Query router | Drop for Phase 1 | **Dropped — always run all retrievers** | ✅ Decided |
 | 4 | DuckDB FTS | Consider Tantivy | **Keep DuckDB FTS, eval-driven migration** | ✅ Decided |

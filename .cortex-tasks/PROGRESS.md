@@ -6,7 +6,7 @@
 
 **Last updated:** 2026-03-15
 **Last completed task:** Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
-**Next task:** None — all tasks complete
+**Next task:** None — awaiting new tasks
 **Session:** 22
 
 ## Completed Tasks

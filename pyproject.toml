@@ -54,6 +54,9 @@ dev = [
     "pre-commit>=3.0.0",
 ]
 
+[project.scripts]
+cortex = "cortex.cli:cli"
+
 [project.urls]
 Documentation = "https://github.com/your-org/cortex"
 Repository = "https://github.com/your-org/cortex"

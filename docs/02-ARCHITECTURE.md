@@ -17,7 +17,7 @@
                        │ MCP Protocol
                        ▼
 ┌─────────────────────────────────────────────────────┐
-│              MCP Server (FastMCP/stdio)               │
+│         MCP Server (FastMCP/streamable-http)            │
 │                                                       │
 │  ┌─────────┐  ┌──────────┐  ┌───────────────────┐   │
 │  │ Capture  │  │  Query   │  │    Workflow        │   │
@@ -45,7 +45,7 @@
 
 ### Key Architectural Decisions
 
-1. **FastMCP 3.x with stdio transport as the service backbone.** Decorator-based tool registration with automatic schema generation from type hints. Communicates with Claude Code via stdio (standard input/output). Project management via uv. Simpler architecture than FastAPI without the HTTP server overhead.
+1. **FastMCP 3.x with streamable-http transport as the service backbone.** Decorator-based tool registration with automatic schema generation from type hints. Runs as a single background HTTP server (`cortex serve`) on `127.0.0.1:8757`, allowing multiple clients (Claude Code, Claude Desktop) to connect simultaneously. Managed via `cortex install` (LaunchAgent) and `cortex restart`. Falls back to stdio mode (`cortex stdio`) for single-client use.
 
 2. **Three storage backends, one source of truth.** The Obsidian vault is canonical. DuckDB holds the full-text index and structured metadata. LanceDB holds vector embeddings. NetworkX (persisted via GraphML) holds the knowledge graph. All derived stores are rebuildable from the vault.
 
@@ -58,7 +58,7 @@
 | Component | Technology | Rationale |
 |---|---|---|
 | Language | Python 3.14+ | Rich ML/NLP ecosystem, fast prototyping |
-| MCP Server | FastMCP 3.x | Decorator-based tool registration, auto schema from type hints, stdio transport for Claude Code |
+| MCP Server | FastMCP 3.x | Decorator-based tool registration, auto schema from type hints, streamable-http transport for multi-client access |
 | Project Management | uv | Fast, reliable Python package management |
 | Full-text Search | DuckDB FTS | Embedded, no external service, SQL-friendly |
 | Vector Store | LanceDB | Embedded, local-first, columnar, fast |
@@ -1201,12 +1201,19 @@ pytest, pytest-asyncio
 **Deliverables:**
 - `src/cortex/mcp/server.py` — FastMCP server with tool definitions
 - `src/cortex/mcp/tools.py` — tool implementations calling services
-- `src/cortex/main.py` — FastMCP server entry point (stdio transport)
-- MCP config snippets for Claude Code's `settings.json` (both bare-metal and Docker variants)
+- `src/cortex/cli.py` — CLI with `serve`, `stdio`, `install`, `uninstall`, `restart`, `status` commands
+- `src/cortex/main.py` — backward-compat entry point (also supports `--http` flag)
+- `src/cortex/__main__.py` — enables `python -m cortex`
+- `pyproject.toml` `[project.scripts]` entry: `cortex = "cortex.cli:cli"`
+- LaunchAgent support for macOS (`com.cortex.mcp-server`)
 
 **Key behaviors:**
+- `cortex serve` runs the server on `127.0.0.1:8757` via streamable-http (multi-client)
+- `cortex stdio` runs in stdio mode (single client, for Docker or testing)
+- `cortex install` writes LaunchAgent + configures Claude Code and Claude Desktop MCP
+- `cortex restart` restarts the server (picks up code changes in dev mode)
 - FastMCP server starts and registers tools via decorators
-- Claude Code can discover tools (`capture_thought`, `search_vault`, etc.)
+- Claude Code and Claude Desktop can discover tools (`capture_thought`, `search_vault`, etc.)
 - Capture tools create drafts and return previews (never write directly)
 - Approve/update/reject tools manage the draft lifecycle
 - Search tools run the query pipeline (all three systems in parallel) and return structured context

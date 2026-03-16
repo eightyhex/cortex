@@ -10,16 +10,29 @@ Cortex transforms your Obsidian vault into a queryable, intelligent knowledge ba
 
 ## Quick Start
 
-### 1. Install & Configure
+### 1. Install
+
+**Option A — Install as a tool (recommended for end users):**
+
+```bash
+# Requires uv (https://docs.astral.sh/uv/)
+uv tool install git+https://github.com/your-org/cortex.git
+```
+
+**Option B — Clone the repo (for development):**
 
 ```bash
 git clone https://github.com/your-org/cortex.git
 cd cortex
-
-# Install dependencies (requires Python 3.14+ and uv)
 uv sync
+```
 
-# Create your config
+### 2. Configure
+
+Create your config file. If you installed as a tool, create `settings.yaml` in `~/.config/cortex/`. If you cloned the repo, create it in the project root:
+
+```bash
+# From the repo:
 cp settings.example.yaml settings.yaml
 ```
 
@@ -30,67 +43,26 @@ cp -r vault.example/ ~/Documents/my-cortex-vault
 # then set vault.path: ~/Documents/my-cortex-vault in settings.yaml
 ```
 
-### 2. Add Cortex to Claude Code
+### 3. Install the MCP Server
 
-Register Cortex as an MCP server using the CLI. Choose **user** scope (available in all projects) or **project** scope (this repo only):
-
-**Global (recommended):**
+The `cortex install` command does everything automatically — it starts a background HTTP server, registers it with Claude Code, and configures Claude Desktop:
 
 ```bash
-claude mcp add -s user \
-  -e CORTEX_VAULT_PATH=/absolute/path/to/your/vault \
-  -- cortex uv run --directory /absolute/path/to/cortex python -m cortex.main
+# If installed as a tool:
+cortex install
+
+# If running from the repo:
+uv run cortex install
 ```
 
-**Project-only:**
+This creates a macOS LaunchAgent that:
+- Starts the Cortex server automatically on login
+- Restarts it if it crashes
+- Runs a **single server process** shared by Claude Code and Claude Desktop
 
-Create a `.mcp.json` file in the repo root:
+### 4. Restart Claude Apps & Build Index
 
-```json
-{
-  "mcpServers": {
-    "cortex": {
-      "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/cortex", "python", "-m", "cortex.main"],
-      "env": {
-        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
-      }
-    }
-  }
-}
-```
-
-**Docker alternative:**
-
-```bash
-claude mcp add -s user \
-  -e CORTEX_VAULT_PATH=/absolute/path/to/your/vault \
-  -- cortex docker compose -f /path/to/cortex/docker-compose.yml run --rm -i cortex
-```
-
-### 3. Add Cortex to Claude Desktop App (optional)
-
-To use Cortex with the Claude macOS desktop app (Chat, Cowork), add it to the desktop config file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "cortex": {
-      "command": "uv",
-      "args": ["run", "--directory", "/absolute/path/to/cortex", "python", "-m", "cortex.main"],
-      "env": {
-        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
-      }
-    }
-  }
-}
-```
-
-If the file already exists with other settings, merge the `mcpServers` block into it. Restart the Claude desktop app after saving.
-
-### 4. Restart & Build Index
-
-Restart Claude Code, then tell Claude:
+Restart Claude Code and Claude Desktop to pick up the new MCP config, then tell Claude:
 
 > "rebuild my cortex index"
 
@@ -99,6 +71,26 @@ This scans your vault and builds the search indexes. The embedding model (~270MB
 ### 5. Start Using It
 
 See [Usage Guide](#-usage-guide) below for all available commands and examples.
+
+### Managing the Server
+
+```bash
+cortex status     # check if the server is running
+cortex restart    # restart (picks up code/config changes)
+cortex uninstall  # remove LaunchAgent + MCP configs from Claude apps
+```
+
+### Updating Cortex
+
+```bash
+# If installed as a tool:
+uv tool upgrade cortex
+cortex restart
+
+# If running from the repo:
+git pull
+cortex restart    # or: uv run cortex restart
+```
 
 ### Enabling / Disabling Cortex
 
@@ -231,6 +223,9 @@ cortex/
 │
 ├── src/cortex/                       # Main Python package
 │   ├── __init__.py
+│   ├── __main__.py                   # `python -m cortex` entry point
+│   ├── cli.py                        # CLI: serve, install, uninstall, restart, status
+│   ├── main.py                       # Backward-compat entry point (python -m cortex.main)
 │   ├── vault/                        # Vault I/O, parsing, file watching
 │   ├── index/                        # DuckDB FTS + LanceDB embeddings
 │   ├── graph/                        # NetworkX knowledge graph
@@ -262,7 +257,8 @@ cortex/
 │   └── _templates/                   # Note templates (inbox, task, source, ...)
 │
 └── scripts/
-    └── docker-entrypoint.sh          # Docker first-run init + server startup
+    ├── docker-entrypoint.sh          # Docker first-run init + server startup
+    └── dev-loop.sh                   # Task-driven development loop
 
 # Not in repo (git-ignored):
 # settings.yaml       ← your machine-specific config (copied from settings.example.yaml)
@@ -275,7 +271,7 @@ cortex/
 | Component | Technology | Why? |
 |---|---|---|
 | **Language** | Python 3.14+ | Rich ML/NLP ecosystem, fast prototyping |
-| **MCP Server** | FastMCP 3.x | Type-hint schemas, stdio transport, no HTTP overhead |
+| **MCP Server** | FastMCP 3.x | Type-hint schemas, streamable-http transport, multi-client |
 | **Full-text Search** | DuckDB FTS | BM25 scoring, embedded, SQL-friendly |
 | **Vector Store** | LanceDB | Embedded, columnar, incremental updates |
 | **Embeddings** | sentence-transformers (`nomic-embed-text`) | Local, CPU-friendly, 768-dim vectors |
@@ -334,21 +330,28 @@ All note captures (via MCP tools) produce a draft preview first. Users approve, 
 
 Users should go from `git clone` to `docker compose up` to working system. No Python install, no manual dependency management, no model downloads. Docker caches the embedding model in a separate layer.
 
-### Why stdio MCP?
+### Why Streamable HTTP?
 
-No HTTP server overhead. Claude Code spawns the MCP process directly. Simpler architecture, lower latency, easier debugging.
+Cortex runs as a single background server process using FastMCP's `streamable-http` transport. This allows multiple clients (Claude Code, Claude Desktop, future web UIs) to connect to the same server simultaneously, avoiding DuckDB lock conflicts from multiple stdio processes. The server auto-starts on login via a macOS LaunchAgent and restarts if it crashes.
 
 ---
 
 ## 🧪 Development
 
 ```bash
-uv sync                    # install dependencies
-uv run pytest              # run all 395 tests
-uv run pytest evals/ -v    # run eval harness (retrieval quality)
-just test                  # shortcut via justfile
-just dev                   # start MCP server locally
-just eval                  # run evals
+uv sync                       # install dependencies
+uv run pytest                  # run all tests
+uv run pytest evals/ -v        # run eval harness (retrieval quality)
+
+# Server management (dev mode — runs from source)
+uv run cortex install          # install LaunchAgent + configure Claude apps
+uv run cortex restart          # restart after code changes
+uv run cortex status           # check if running
+uv run cortex uninstall        # remove LaunchAgent + configs
+
+# Run server in foreground (for debugging)
+uv run cortex serve            # HTTP on port 8757
+uv run cortex stdio            # stdio mode (single client)
 ```
 
 ## 📋 Getting Started for Contributors
