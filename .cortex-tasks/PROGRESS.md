@@ -5,8 +5,8 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
-**Next task:** Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
+**Last completed task:** Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
+**Next task:** None — all tasks complete
 **Session:** 22
 
 ## Completed Tasks
@@ -535,6 +535,14 @@
 - New test: `test_lexical_snippet_returns_up_to_1000_chars` verifies snippet > 200 chars for long content and full content for short notes
 - Files: `src/cortex/index/lexical.py`, `tests/test_index/test_lexical.py`
 - Tests: 18 lexical tests, all pass
+
+### 2026-03-15 — Task 16.9 ✅
+- Created `rich_setup` fixture with 5 notes (500+ chars each), varied tags, source_url
+- 5 new integration tests in `TestSearchDrivenQA` class
+- Verified: top 3 results include `content` field, all results include `tags`, source notes include `source_url`
+- Verified: snippets exceed 200 chars, context uses increased budget
+- Files: `tests/test_mcp/test_search_integration.py`
+- Tests: 12 integration tests, all pass
 
 ### 2026-03-15 — Task 16.8 ✅
 - Added `multi_chunk: bool = False` parameter to `SemanticIndex.search()`

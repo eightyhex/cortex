@@ -252,3 +252,184 @@ class TestFullSearchIntegration:
         explanation = result["explanation"]
         assert "lexical" in explanation or "semantic" in explanation, \
             f"Explanation should mention search sources: {explanation}"
+
+
+@pytest.fixture()
+def rich_setup(tmp_path: Path):
+    """Set up vault with 5+ notes containing substantial content for Q&A testing."""
+    vault_dir = tmp_path / "vault"
+    scaffold_vault(vault_dir)
+
+    config = CortexConfig(
+        vault={"path": str(vault_dir)},
+        draft={"drafts_dir": str(tmp_path / "drafts")},
+        index={
+            "db_path": str(tmp_path / "cortex.duckdb"),
+            "embeddings_path": str(tmp_path / "embeddings"),
+        },
+    )
+
+    # Note 1: Long permanent note about neural networks (~700 chars)
+    _write_note(vault_dir, "30-permanent", "nn-deep-dive.md", (
+        "---\n"
+        "id: rich-001\n"
+        "title: Neural Networks Deep Dive\n"
+        "type: permanent\n"
+        "tags: [neural-networks, deep-learning, architecture]\n"
+        "status: active\n"
+        "created: 2026-03-10T10:00:00+00:00\n"
+        "modified: 2026-03-12T15:00:00+00:00\n"
+        "---\n\n"
+        "Neural networks are computing systems inspired by biological neural networks. "
+        "They consist of layers of interconnected nodes that process information. "
+        "The input layer receives data, hidden layers perform transformations, and "
+        "the output layer produces predictions. Training involves adjusting weights "
+        "through backpropagation, where errors are propagated backwards through the "
+        "network. Common architectures include convolutional neural networks for images, "
+        "recurrent neural networks for sequences, and transformer networks for natural "
+        "language processing. Regularization techniques like dropout and batch normalization "
+        "help prevent overfitting. Learning rate schedules and optimizers like Adam and "
+        "SGD with momentum control the training dynamics.\n"
+    ))
+
+    # Note 2: Long concept note about transformers (~600 chars)
+    _write_note(vault_dir, "20-concepts", "transformers.md", (
+        "---\n"
+        "id: rich-002\n"
+        "title: Transformer Architecture\n"
+        "type: concept\n"
+        "tags: [transformers, attention, nlp]\n"
+        "status: active\n"
+        "created: 2026-03-11T08:00:00+00:00\n"
+        "modified: 2026-03-11T08:00:00+00:00\n"
+        "---\n\n"
+        "The transformer architecture revolutionized natural language processing by "
+        "introducing the self-attention mechanism. Unlike RNNs, transformers process "
+        "all tokens in parallel, making them highly efficient for training on modern "
+        "hardware. Key components include multi-head attention, positional encoding, "
+        "layer normalization, and feed-forward networks. The encoder-decoder structure "
+        "is used for translation tasks, while decoder-only models like GPT excel at "
+        "text generation. BERT uses the encoder for bidirectional understanding. "
+        "See [[Neural Networks Deep Dive]] for background.\n"
+    ))
+
+    # Note 3: Source note with URL (~550 chars)
+    _write_note(vault_dir, "10-sources", "attention-paper.md", (
+        "---\n"
+        "id: rich-003\n"
+        "title: Attention Is All You Need\n"
+        "type: source\n"
+        "tags: [paper, transformers, attention]\n"
+        "status: active\n"
+        "source_url: https://arxiv.org/abs/1706.03762\n"
+        "created: 2026-03-08T12:00:00+00:00\n"
+        "modified: 2026-03-08T12:00:00+00:00\n"
+        "---\n\n"
+        "The seminal paper introducing the transformer architecture. It proposes "
+        "replacing recurrence and convolutions entirely with attention mechanisms. "
+        "The model achieves state-of-the-art results on English-to-German and "
+        "English-to-French translation benchmarks. Key innovations include scaled "
+        "dot-product attention, multi-head attention allowing the model to attend "
+        "to information from different representation subspaces, and positional "
+        "encodings using sine and cosine functions.\n"
+    ))
+
+    # Note 4: Long concept note about embeddings (~600 chars)
+    _write_note(vault_dir, "20-concepts", "embeddings.md", (
+        "---\n"
+        "id: rich-004\n"
+        "title: Word Embeddings and Representations\n"
+        "type: concept\n"
+        "tags: [embeddings, nlp, representation-learning]\n"
+        "status: active\n"
+        "created: 2026-03-09T14:00:00+00:00\n"
+        "modified: 2026-03-09T14:00:00+00:00\n"
+        "---\n\n"
+        "Word embeddings map words to dense vector representations that capture "
+        "semantic meaning. Word2Vec introduced skip-gram and CBOW architectures. "
+        "GloVe combines global matrix factorization with local context windows. "
+        "Modern approaches use contextual embeddings from transformer models, where "
+        "the same word gets different vectors depending on context. These embeddings "
+        "form the foundation of most NLP systems, enabling transfer learning across "
+        "tasks. Sentence embeddings extend this concept to full sequences using "
+        "techniques like mean pooling or specialized models like Sentence-BERT.\n"
+    ))
+
+    # Note 5: Long permanent note about training (~600 chars)
+    _write_note(vault_dir, "30-permanent", "training-techniques.md", (
+        "---\n"
+        "id: rich-005\n"
+        "title: Model Training Techniques\n"
+        "type: permanent\n"
+        "tags: [training, optimization, deep-learning]\n"
+        "status: active\n"
+        "created: 2026-03-07T16:00:00+00:00\n"
+        "modified: 2026-03-13T11:00:00+00:00\n"
+        "---\n\n"
+        "Training deep learning models requires careful selection of hyperparameters "
+        "and optimization strategies. Gradient descent variants include SGD, Adam, "
+        "AdaGrad, and RMSprop. Learning rate scheduling with warmup and cosine decay "
+        "improves convergence. Data augmentation increases effective training set size. "
+        "Mixed precision training uses float16 for speed with float32 master weights. "
+        "Distributed training across multiple GPUs uses data parallelism or model "
+        "parallelism. Gradient accumulation simulates larger batch sizes on limited "
+        "hardware. Early stopping prevents overfitting by monitoring validation loss.\n"
+    ))
+
+    vault = VaultManager(vault_dir, config)
+    notes = vault.scan_vault()
+
+    index_mgr = IndexManager(config)
+    index_mgr.rebuild_all(notes)
+
+    graph = GraphManager(tmp_path / "graph.graphml")
+    graph.build_from_vault(notes)
+    graph.save()
+
+    init_server(config=config, vault=vault, drafts=None, index=index_mgr, graph=graph)
+
+    return {"config": config, "vault": vault, "notes": notes}
+
+
+class TestSearchDrivenQA:
+    """Verify search_vault returns enough info for Q&A without get_note calls."""
+
+    def test_top_results_include_full_content(self, rich_setup):
+        """Top 3 results include full content field."""
+        result = search_vault("transformer attention neural networks")
+        assert result["total"] >= 3
+        for r in result["results"][:3]:
+            assert "content" in r, f"Top result {r['title']} missing 'content'"
+            assert len(r["content"]) > 200, f"Content for {r['title']} too short"
+
+    def test_all_results_include_tags(self, rich_setup):
+        """All results include tags as a list."""
+        result = search_vault("neural networks embeddings")
+        assert result["total"] >= 1
+        for r in result["results"]:
+            assert "tags" in r, f"Result {r['title']} missing 'tags'"
+            assert isinstance(r["tags"], list)
+            assert len(r["tags"]) > 0
+
+    def test_source_notes_include_source_url(self, rich_setup):
+        """Source notes include source_url in results."""
+        result = search_vault("attention paper transformer", limit=20)
+        source_results = [r for r in result["results"] if r["note_type"] == "source"]
+        assert len(source_results) >= 1
+        for r in source_results:
+            assert "source_url" in r, f"Source result {r['title']} missing 'source_url'"
+
+    def test_snippets_exceed_200_chars(self, rich_setup):
+        """Snippets for notes with substantial content exceed 200 characters."""
+        result = search_vault("neural networks training techniques")
+        assert result["total"] >= 1
+        long_snippets = [r for r in result["results"] if len(r.get("snippet", "")) > 200]
+        assert len(long_snippets) >= 1, "At least one snippet should exceed 200 chars"
+
+    def test_context_exceeds_4000_chars(self, rich_setup):
+        """Context field uses the increased budget and exceeds 4000 characters."""
+        result = search_vault("neural networks transformer embeddings training", limit=10)
+        context = result["context"]
+        assert len(context) > 2000, (
+            f"Context should be substantial with increased budget, got {len(context)} chars"
+        )

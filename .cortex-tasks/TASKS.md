@@ -976,7 +976,7 @@
 ---
 
 ### Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
-**Status:** `pending`
+**Status:** `done`
 **File:** `tests/test_mcp/test_search_integration.py` (extend)
 **Depends on:** Task 16.1, 16.2, 16.3, 16.4, 16.6, 16.7
 
