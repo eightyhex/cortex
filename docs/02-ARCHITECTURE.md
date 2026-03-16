@@ -57,7 +57,7 @@
 
 | Component | Technology | Rationale |
 |---|---|---|
-| Language | Python 3.13+ | Rich ML/NLP ecosystem, fast prototyping |
+| Language | Python 3.14+ | Rich ML/NLP ecosystem, fast prototyping |
 | MCP Server | FastMCP 3.x | Decorator-based tool registration, auto schema from type hints, stdio transport for Claude Code |
 | Project Management | uv | Fast, reliable Python package management |
 | Full-text Search | DuckDB FTS | Embedded, no external service, SQL-friendly |
@@ -896,7 +896,7 @@ The Dockerfile uses a multi-stage build to keep the final image lean and make re
 
 ```dockerfile
 # Stage 1: Dependencies
-FROM python:3.13-slim AS deps
+FROM python:3.14-slim AS deps
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN pip install uv && uv sync --frozen --no-dev
@@ -906,7 +906,7 @@ FROM deps AS models
 RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('nomic-ai/nomic-embed-text-v1.5')"
 
 # Stage 3: Runtime
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 WORKDIR /app
 COPY --from=models /app/.venv /app/.venv
 COPY --from=models /root/.cache/huggingface /root/.cache/huggingface

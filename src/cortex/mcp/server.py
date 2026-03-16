@@ -325,6 +325,9 @@ def search_vault(
                 note = vault.get_note(r.note_id)
                 entry["created"] = note.created.isoformat()
                 entry["modified"] = note.modified.isoformat()
+                source_url = note.frontmatter.get("source_url")
+                if source_url:
+                    entry["source_url"] = source_url
             except (KeyError, FileNotFoundError):
                 pass
         enriched.append(entry)
@@ -364,6 +367,7 @@ def get_note(note_id: str) -> dict:
         "created": note.created,
         "modified": note.modified,
         "path": str(note.path),
+        "frontmatter": note.frontmatter,
     }
 
 

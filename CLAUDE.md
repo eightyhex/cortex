@@ -38,7 +38,7 @@ This project uses an atomic task system for multi-session development.
 - Keep implementation minimal — match the TDD spec, don't over-engineer
 
 ## Code Style
-- Python 3.13+, type hints on public APIs
+- Python 3.14+, type hints on public APIs
 - Tests in `tests/` mirroring `src/` structure
 - Use `uv run pytest` to run tests
 - Follow existing patterns in the codebase

@@ -10,65 +10,48 @@ Cortex transforms your Obsidian vault into a queryable, intelligent knowledge ba
 
 ## Quick Start
 
-### Docker (Recommended)
+### 1. Install & Configure
 
 ```bash
 git clone https://github.com/your-org/cortex.git
 cd cortex
 
-# 1. Configure your vault path
-cp settings.example.yaml settings.yaml
-# Edit settings.yaml: set vault.path to your Obsidian vault
-
-# 2. Start the server
-CORTEX_VAULT_PATH=~/Documents/my-vault docker compose up -d
-```
-
-### Bare-Metal (no Docker)
-
-```bash
-git clone https://github.com/your-org/cortex.git
-cd cortex
-
-# 1. Install dependencies (requires Python 3.13+ and uv)
+# Install dependencies (requires Python 3.14+ and uv)
 uv sync
 
-# 2. Configure your vault
+# Create your config
 cp settings.example.yaml settings.yaml
-# Edit settings.yaml: set vault.path to your Obsidian vault
-
-# 3. Start MCP server
-uv run python -m cortex.main
 ```
 
-### Configure Claude Code
+Edit `settings.yaml` and set `vault.path` to your Obsidian vault location. Don't have a vault yet? Copy the example:
 
-Add the following to your Claude Code MCP settings (`~/.claude/settings.json` or project `.mcp.json`):
-
-**Docker:**
-
-```json
-{
-  "mcpServers": {
-    "cortex": {
-      "command": "docker",
-      "args": ["compose", "-f", "/path/to/cortex/docker-compose.yml", "run", "--rm", "-i", "cortex"],
-      "env": {
-        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
-      }
-    }
-  }
-}
+```bash
+cp -r vault.example/ ~/Documents/my-cortex-vault
+# then set vault.path: ~/Documents/my-cortex-vault in settings.yaml
 ```
 
-**Bare-metal (uv):**
+### 2. Add Cortex to Claude Code
+
+Register Cortex as an MCP server using the CLI. Choose **user** scope (available in all projects) or **project** scope (this repo only):
+
+**Global (recommended):**
+
+```bash
+claude mcp add -s user \
+  -e CORTEX_VAULT_PATH=/absolute/path/to/your/vault \
+  -- cortex uv run --directory /absolute/path/to/cortex python -m cortex.main
+```
+
+**Project-only:**
+
+Create a `.mcp.json` file in the repo root:
 
 ```json
 {
   "mcpServers": {
     "cortex": {
       "command": "uv",
-      "args": ["run", "--directory", "/path/to/cortex", "python", "-m", "cortex.main"],
+      "args": ["run", "--directory", "/absolute/path/to/cortex", "python", "-m", "cortex.main"],
       "env": {
         "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
       }
@@ -77,23 +60,134 @@ Add the following to your Claude Code MCP settings (`~/.claude/settings.json` or
 }
 ```
 
-After configuring, restart Claude Code. The Cortex tools (`capture_thought`, `search_vault`, `add_task`, etc.) will appear automatically.
-
-### Setting Up Your Vault
-
-Cortex works with any Obsidian vault. Point `settings.yaml` at yours:
-
-```yaml
-vault:
-  path: ~/Documents/my-vault   # wherever your Obsidian vault lives
-```
-
-Don't have a vault yet? Copy the example structure:
+**Docker alternative:**
 
 ```bash
-cp -r vault.example/ ~/Documents/my-cortex-vault
-# then set vault.path in settings.yaml
+claude mcp add -s user \
+  -e CORTEX_VAULT_PATH=/absolute/path/to/your/vault \
+  -- cortex docker compose -f /path/to/cortex/docker-compose.yml run --rm -i cortex
 ```
+
+### 3. Add Cortex to Claude Desktop App (optional)
+
+To use Cortex with the Claude macOS desktop app (Chat, Cowork), add it to the desktop config file at `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "uv",
+      "args": ["run", "--directory", "/absolute/path/to/cortex", "python", "-m", "cortex.main"],
+      "env": {
+        "CORTEX_VAULT_PATH": "/absolute/path/to/your/vault"
+      }
+    }
+  }
+}
+```
+
+If the file already exists with other settings, merge the `mcpServers` block into it. Restart the Claude desktop app after saving.
+
+### 4. Restart & Build Index
+
+Restart Claude Code, then tell Claude:
+
+> "rebuild my cortex index"
+
+This scans your vault and builds the search indexes. The embedding model (~270MB) downloads on first run.
+
+### 5. Start Using It
+
+See [Usage Guide](#-usage-guide) below for all available commands and examples.
+
+### Enabling / Disabling Cortex
+
+Cortex adds MCP tool definitions to your context window. To toggle it on and off without removing the config:
+
+```bash
+claude mcp disable cortex   # turn off (saves context)
+claude mcp enable cortex    # turn back on
+```
+
+Restart Claude Code after toggling.
+
+## 📖 Usage Guide
+
+### Slash Commands
+
+Cortex ships with Claude Code slash commands in `.claude/commands/`. These are available when working in this repo. To make them available globally, copy to your user config:
+
+```bash
+cp .claude/commands/cortex-*.md ~/.claude/commands/
+```
+
+| Command | What it does |
+|---------|-------------|
+| `/cortex-capture <thought>` | Capture a quick thought to your inbox |
+| `/cortex-task <details>` | Add a task with optional due date and priority |
+| `/cortex-link <url + description>` | Save a web link as a source note |
+| `/cortex-note <content>` | Create any note type (concept, permanent, project, etc.) |
+| `/cortex-search <query>` | Hybrid search across your vault (lexical + semantic + graph) |
+| `/cortex-inbox` | Triage pending inbox items with categorization suggestions |
+| `/cortex-review [weekly\|monthly]` | Generate a review summary of vault activity |
+| `/cortex-stale` | Find notes that need review, archival, or categorization |
+| `/cortex-stats` | Show vault statistics and system health |
+| `/cortex-reindex` | Rebuild all search indexes from the vault |
+
+### Natural Language (no slash commands)
+
+You can also just talk to Claude naturally with the MCP enabled:
+
+```
+"save this thought: I should explore using LanceDB for the analytics pipeline"
+"add a task: refactor auth middleware, due 2026-03-20, priority high"
+"save this link: https://example.com/article — great intro to distributed consensus"
+"search my vault for notes about authentication"
+"process my inbox"
+"give me a weekly review"
+"find stale notes that need attention"
+"what are my vault stats?"
+```
+
+### How Capture Works
+
+All note captures go through a **draft-approve flow**:
+
+1. You ask Claude to capture something
+2. Claude creates a draft and shows you a preview
+3. You approve, request edits, or reject
+4. Only approved drafts are written to the vault
+
+This prevents garbage from entering your knowledge base.
+
+### MCP Tools Reference
+
+These are the raw MCP tools that Claude calls under the hood:
+
+| Tool | Description |
+|------|-------------|
+| `mcp_capture_thought` | Quick thought to inbox |
+| `mcp_add_task` | Task with title, due date, priority |
+| `mcp_save_link` | URL as a source note |
+| `mcp_create_note` | Any note type (concept, permanent, project, etc.) |
+| `approve_draft` | Approve a pending draft |
+| `update_draft` | Edit a draft before approving |
+| `reject_draft` | Discard a draft |
+| `search_vault` | Hybrid search (lexical + semantic + graph) |
+| `get_note` | Retrieve full note content by ID |
+| `rebuild_index` | Rebuild all search indexes |
+| `vault_stats` | Note counts, index sizes, last rebuild |
+| `edit_note` | Start an edit on an existing note |
+| `approve_edit` | Commit an edit after review |
+| `archive_note` | Archive a note (deprioritized in search) |
+| `unarchive_note` | Restore an archived note |
+| `supersede_note` | Mark a note as replaced by a newer one |
+| `detect_stale` | Find stale notes with suggested actions |
+| `mcp_process_inbox` | List and categorize inbox items |
+| `mcp_generate_review` | Weekly/monthly activity summary |
+| `mcp_summarize_source` | Summarize a source note |
+| `mcp_staleness_review` | Full staleness review with triage suggestions |
+| `mcp_health_check` | System health check |
 
 ## 📚 Documentation
 
@@ -114,6 +208,19 @@ cortex/
 ├── justfile                          # Task runner (just dev, just test, etc.)
 ├── .gitignore
 ├── .dockerignore
+│
+├── .claude/
+│   └── commands/                     # Claude Code slash commands (/cortex-*)
+│       ├── cortex-capture.md
+│       ├── cortex-task.md
+│       ├── cortex-link.md
+│       ├── cortex-note.md
+│       ├── cortex-search.md
+│       ├── cortex-inbox.md
+│       ├── cortex-review.md
+│       ├── cortex-stale.md
+│       ├── cortex-stats.md
+│       └── cortex-reindex.md
 │
 ├── docs/                             # Design documents
 │   ├── README.md                     # Docs index + reading guide
@@ -167,7 +274,7 @@ cortex/
 
 | Component | Technology | Why? |
 |---|---|---|
-| **Language** | Python 3.13+ | Rich ML/NLP ecosystem, fast prototyping |
+| **Language** | Python 3.14+ | Rich ML/NLP ecosystem, fast prototyping |
 | **MCP Server** | FastMCP 3.x | Type-hint schemas, stdio transport, no HTTP overhead |
 | **Full-text Search** | DuckDB FTS | BM25 scoring, embedded, SQL-friendly |
 | **Vector Store** | LanceDB | Embedded, columnar, incremental updates |
@@ -232,6 +339,17 @@ Users should go from `git clone` to `docker compose up` to working system. No Py
 No HTTP server overhead. Claude Code spawns the MCP process directly. Simpler architecture, lower latency, easier debugging.
 
 ---
+
+## 🧪 Development
+
+```bash
+uv sync                    # install dependencies
+uv run pytest              # run all 395 tests
+uv run pytest evals/ -v    # run eval harness (retrieval quality)
+just test                  # shortcut via justfile
+just dev                   # start MCP server locally
+just eval                  # run evals
+```
 
 ## 📋 Getting Started for Contributors
 

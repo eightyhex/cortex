@@ -50,11 +50,20 @@ done
 
 # ── Logging setup ──────────────────────────────────────────────────────────
 LOG_DIR="$PROJECT_DIR/logs"
-mkdir -p "$LOG_DIR"
+mkdir -p "$LOG_DIR" 2>/dev/null
+# If the directory isn't writable (e.g. owned by root), recreate it
+if [[ ! -w "$LOG_DIR" ]]; then
+  rm -rf "$LOG_DIR" 2>/dev/null
+  mkdir -p "$LOG_DIR" 2>/dev/null
+fi
 LOG_FILE="$LOG_DIR/dev-loop-$(date '+%Y%m%d-%H%M%S').log"
 
-# Tee all stdout and stderr to the log file
-exec > >(tee -a "$LOG_FILE") 2>&1
+# Tee all stdout and stderr to the log file (skip if still not writable)
+if [[ -w "$LOG_DIR" ]]; then
+  exec > >(tee -a "$LOG_FILE") 2>&1
+else
+  echo "⚠️  Cannot write to $LOG_DIR — logging to stdout only"
+fi
 
 # The prompt sent to each Claude Code session
 TASK_PROMPT='Read .cortex-tasks/PROGRESS.md to find the next task. Then read that task in .cortex-tasks/TASKS.md for the full acceptance criteria. Implement the task, run the tests, update PROGRESS.md and TASKS.md, and commit your work. If all tasks are done, say "ALL TASKS COMPLETE" and exit.'

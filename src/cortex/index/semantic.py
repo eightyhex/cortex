@@ -44,8 +44,21 @@ class SemanticIndex:
         self._ensure_table()
 
     def _ensure_table(self) -> None:
-        """Create the chunks table if it doesn't exist."""
-        if self.TABLE_NAME not in self._db.list_tables():
+        """Create the chunks table if it doesn't exist, or recreate on schema mismatch."""
+        try:
+            if self.TABLE_NAME not in self._db.list_tables():
+                self._db.create_table(self.TABLE_NAME, schema=self._schema, exist_ok=True)
+            else:
+                table = self._db.open_table(self.TABLE_NAME)
+                if table.schema != self._schema:
+                    self._db.drop_table(self.TABLE_NAME)
+                    self._db.create_table(self.TABLE_NAME, schema=self._schema)
+        except ValueError:
+            # Schema mismatch with stale data on disk — drop and recreate
+            try:
+                self._db.drop_table(self.TABLE_NAME)
+            except Exception:
+                pass
             self._db.create_table(self.TABLE_NAME, schema=self._schema)
 
     def _get_table(self):

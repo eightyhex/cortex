@@ -59,6 +59,7 @@ Design documents for Cortex — a local-first, AI-native second brain built on O
 - **`vault.example/`** — Reference vault structure + note templates. Your actual vault lives outside the repo.
 - **`vault/`** is gitignored — point `settings.yaml → vault.path` at your Obsidian vault wherever it lives.
 - **`data/`** is gitignored — always rebuildable from the vault via `just rebuild-index`.
+- **`.claude/commands/`** — Claude Code slash commands (`/cortex-capture`, `/cortex-search`, etc.). Copy to `~/.claude/commands/` for global availability. See the main [README](../README.md#-usage-guide) for the full usage guide.
 
 ---
 

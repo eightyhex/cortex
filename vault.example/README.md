@@ -36,7 +36,14 @@ cp -r vault.example/ ~/Documents/my-cortex-vault
 Templates live in `_templates/`. Each corresponds to a note type that Cortex can capture.
 See individual files for the expected frontmatter schema.
 
-Cortex's `capture_thought`, `add_task`, `save_link`, and `create_note` tools use these templates when generating draft notes.
+Cortex's MCP tools use these templates when generating draft notes. In Claude Code, use the slash commands:
+
+- `/cortex-capture` — quick thought to inbox
+- `/cortex-task` — task with due date and priority
+- `/cortex-link` — save a URL as a source note
+- `/cortex-note` — create any note type
+
+Or just talk to Claude naturally: "save this thought: ..."
 
 ## Vault Rules
 
