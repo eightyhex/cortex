@@ -5,9 +5,9 @@
 ## Current State
 
 **Last updated:** 2026-03-15
-**Last completed task:** Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired
-**Next task:** ALL TASKS COMPLETE
-**Session:** 19
+**Last completed task:** Task 16.1 — Increase Snippet Length for Semantic Search Results
+**Next task:** Task 16.2 — Increase Snippet Length for Lexical Search Results
+**Session:** 20
 
 ## Completed Tasks
 
@@ -59,6 +59,7 @@
 - Task 15.5 — Populate Snippets for Graph Search Results ✅
 - Task 15.6 — Ensure Reranker Handles Notes from All Search Sources ✅
 - Task 15.7 — Integration Test: Full Search Pipeline with All Components Wired ✅
+- Task 16.1 — Increase Snippet Length for Semantic Search Results ✅
 
 ## Notes & Decisions
 
@@ -519,6 +520,13 @@
 - If both lexical and semantic lookups fail, note gets default scoring (no crash)
 - Files: `src/cortex/query/reranker.py`, `src/cortex/query/pipeline.py`, `tests/test_query/test_reranker.py`
 - Tests: 2 new tests (semantic fallback, both-fail default scoring), 408 total — all pass
+
+### 2026-03-15 — Task 16.1 ✅
+- Removed `[:200]` truncation from `SemanticIndex.search()` snippet at `semantic.py:163`
+- Semantic search now returns the full chunk text in `SearchResult.snippet`
+- New test: `test_semantic_snippet_returns_full_chunk_text` verifies snippet > 200 chars and matches full content
+- Files: `src/cortex/index/semantic.py`, `tests/test_index/test_semantic.py`
+- Tests: 10 semantic tests, all pass
 
 <!-- Example entry:
 ### 2026-03-15 — Task 1.1 ✅

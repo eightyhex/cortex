@@ -160,7 +160,7 @@ class SemanticIndex:
                     note_id=note_id,
                     title=row["title"],
                     score=score,
-                    snippet=row["text"][:200],
+                    snippet=row["text"],
                     note_type=row["note_type"],
                     path=row.get("path", ""),
                     status=row.get("status", ""),

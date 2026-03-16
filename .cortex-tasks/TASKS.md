@@ -840,4 +840,158 @@
 
 ---
 
-*End of Task Plan — 42 atomic tasks across 15 sessions*
+## Session 16: Search Quality for Question Answering
+
+### Task 16.1 — Increase Snippet Length for Semantic Search Results
+**Status:** `done`
+**File:** `src/cortex/index/semantic.py`
+**Depends on:** Task 15.7
+
+**Description:** Semantic search already stores full chunk text (300–500 tokens) in LanceDB, but `search()` truncates it to 200 characters at `semantic.py:163` (`row["text"][:200]`). This discards the majority of the chunk content that was already retrieved from the database. The chunk text is the most relevant passage for the query — truncating it to 200 characters removes the context Claude needs to answer questions without a follow-up `get_note` call.
+
+**Acceptance Criteria:**
+- [ ] `SemanticIndex.search()` returns the full chunk text in `snippet` (remove the `[:200]` truncation at line 163)
+- [ ] The `SearchResult.snippet` field for semantic results now contains the complete chunk text (300–500 tokens worth)
+- [ ] No change to lexical or graph snippet behavior in this task
+- [ ] Existing semantic search tests pass
+- [ ] New test: `test_semantic_snippet_returns_full_chunk_text` — index a note with content longer than 200 characters, search for it, assert the snippet length exceeds 200 characters and matches the full chunk text
+
+---
+
+### Task 16.2 — Increase Snippet Length for Lexical Search Results
+**Status:** `pending`
+**File:** `src/cortex/index/lexical.py`
+**Depends on:** Task 15.7
+
+**Description:** Lexical search truncates snippets to 200 characters at `lexical.py:204` (`content[:200]`). The full content is stored in DuckDB and is available in the query result row, but the snippet generation discards it. Unlike semantic search where chunks are already scoped to ~300–500 tokens, lexical results have access to the full note content. Returning the entire note body would be excessive, so the snippet should be increased to a reasonable length (e.g., 1000 characters) that provides enough context for Claude to attempt an answer.
+
+**Acceptance Criteria:**
+- [ ] `LexicalIndex.search()` returns up to 1000 characters in `snippet` (change `content[:200]` to `content[:1000]` at line 204)
+- [ ] No change to semantic or graph snippet behavior in this task
+- [ ] Existing lexical search tests pass
+- [ ] New test: `test_lexical_snippet_returns_up_to_1000_chars` — index a note with content longer than 1000 characters, search for it, assert snippet length is 1000 characters; index a note with content shorter than 1000 characters, assert snippet contains the full content
+
+---
+
+### Task 16.3 — Increase Snippet Length for Graph Search Results
+**Status:** `pending`
+**File:** `src/cortex/graph/queries.py`
+**Depends on:** Task 15.5
+
+**Description:** `graph_search()` truncates snippets to 200 characters at `queries.py:128` (`note.content[:200]`). Graph-expanded results are notes discovered through wikilink relationships — they weren't directly matched by the query, so their snippet is the only signal Claude has to judge relevance. A 200-character snippet is too short for this purpose. Increase to 1000 characters, consistent with the lexical change in Task 16.2.
+
+**Acceptance Criteria:**
+- [ ] `graph_search()` returns up to 1000 characters in `snippet` (change `note.content[:200]` to `note.content[:1000]` at line 128)
+- [ ] No change to lexical or semantic snippet behavior in this task
+- [ ] Existing graph query tests pass
+- [ ] Update existing test `test_graph_search_with_vault_populates_snippets` to assert snippet can exceed 200 characters when note content is long enough
+
+---
+
+### Task 16.4 — Include Tags in search_vault Results
+**Status:** `pending`
+**File:** `src/cortex/mcp/server.py`
+**Depends on:** Task 15.7
+
+**Description:** The `search_vault` MCP tool enriches results with `created`, `modified`, and `source_url` from the vault, but does not include `tags`. Tags are a primary organizational signal in Cortex — they tell Claude what a note is about (e.g., `["python", "testing"]` vs `["go", "deployment"]`) and are critical for disambiguation when multiple results match a query. The vault lookup in the enrichment loop (`server.py:323–332`) already fetches the full `Note` object, so tags are available but not included in the response.
+
+**Acceptance Criteria:**
+- [ ] `search_vault` includes `"tags": note.tags` in each enriched result entry (add after the `modified` line at ~327)
+- [ ] Tags are a `list[str]` in the response (not comma-separated string)
+- [ ] When vault is unavailable or note lookup fails, the `tags` field is absent (consistent with `created`/`modified` behavior)
+- [ ] Existing search MCP tests pass
+- [ ] New test in `tests/test_mcp/test_search_admin.py`: `test_search_results_include_tags` — create a note with tags, search for it, assert the result dict contains `"tags"` as a list
+
+---
+
+### Task 16.5 — Include Tags in RankedResult for Context Assembly
+**Status:** `pending`
+**Files:** `src/cortex/query/pipeline.py`, `src/cortex/query/context.py`
+**Depends on:** Task 16.4
+
+**Description:** The `ContextAssembler` accesses tags through a separate `notes` dict lookup (`context.py:59`), which requires a full vault `get_note` call per result during pipeline execution (`pipeline.py:136–142`). This is already happening, but the `RankedResult` dataclass itself has no `tags` field — meaning any consumer of `QueryResult.results` (including the MCP tool) cannot access tags without the vault. Adding `tags` to `RankedResult` makes the data self-contained and available at every layer.
+
+**Acceptance Criteria:**
+- [ ] Add `tags: list[str] = field(default_factory=list)` to the `RankedResult` dataclass in `pipeline.py`
+- [ ] `QueryPipeline.execute()` populates `tags` on each `RankedResult` from the vault note lookup (same loop at `pipeline.py:136–142` that already fetches notes for context assembly)
+- [ ] `ContextAssembler.assemble()` uses `result.tags` as a fallback when the `notes` dict is not provided or the note is missing (currently falls back to `"none"`)
+- [ ] Existing pipeline and context tests pass
+- [ ] New test in `tests/test_query/test_pipeline.py`: `test_ranked_results_include_tags` — run a query against a vault with tagged notes, assert `RankedResult.tags` is populated
+
+---
+
+### Task 16.6 — Auto-Fetch Full Content for Top-K Results in search_vault
+**Status:** `pending`
+**File:** `src/cortex/mcp/server.py`
+**Depends on:** Task 16.1, 16.2, 16.3
+
+**Description:** Even with longer snippets, Claude often needs the full note content to answer questions accurately. Currently, Claude must call `get_note` separately for each note it wants to read in full — this adds round-trips and relies on Claude knowing to do so. The `search_vault` enrichment loop already calls `vault.get_note()` for every result to fetch dates. For the top N results (configurable, default 3), the full note content should be included in the response so Claude can answer directly without follow-up calls.
+
+**Acceptance Criteria:**
+- [ ] Add an optional `include_content` parameter to `search_vault(query, limit, note_type, include_content: int = 3)` — the number of top results to include full content for
+- [ ] For the first `include_content` results in the enriched list, include `"content": note.content` in the response dict
+- [ ] For results beyond `include_content`, do not include the `content` field (keeps response size manageable)
+- [ ] When `include_content=0`, no content is included (opt-out for lightweight searches)
+- [ ] The `content` field is the raw markdown body (same as `get_note` returns), not the snippet
+- [ ] Existing search MCP tests pass
+- [ ] New test: `test_search_includes_full_content_for_top_results` — search with `include_content=2`, assert first 2 results have `"content"` key, remaining results do not
+- [ ] New test: `test_search_include_content_zero` — search with `include_content=0`, assert no results have `"content"` key
+
+---
+
+### Task 16.7 — Increase Context Assembly Token Budget
+**Status:** `pending`
+**Files:** `src/cortex/config.py`, `src/cortex/query/context.py`, `src/cortex/query/pipeline.py`
+**Depends on:** Task 16.1, 16.2, 16.3
+
+**Description:** The `ContextAssembler` has a default budget of 4000 tokens (`context.py:21`), which is also the value in `McpConfig.max_context_tokens` (`config.py:67`). With longer snippets from Tasks 16.1–16.3, the assembler will truncate them more aggressively to fit the same budget, defeating the purpose. The budget should be increased and wired from config so it can be tuned. Claude's context window is large enough that 8000–12000 tokens of search context is reasonable.
+
+**Acceptance Criteria:**
+- [ ] Change `McpConfig.max_context_tokens` default from `4000` to `8000` in `config.py:67`
+- [ ] `QueryPipeline.execute()` passes the config's `max_context_tokens` to `ContextAssembler.assemble()` instead of using the assembler's hardcoded default of 4000
+- [ ] Add `max_context_tokens` parameter to `QueryPipeline.__init__` (sourced from `McpConfig` in `search_vault`)
+- [ ] `search_vault` in `server.py` passes `config.mcp.max_context_tokens` to `QueryPipeline`
+- [ ] `ContextAssembler.assemble()` still accepts `max_tokens` as a parameter (no change to its signature)
+- [ ] Existing context assembly and pipeline tests pass (they pass explicit `max_tokens` values so won't be affected by default change)
+- [ ] New test in `tests/test_query/test_pipeline.py`: `test_pipeline_respects_max_context_tokens` — create a pipeline with a custom `max_context_tokens`, assert the assembled context length reflects the budget
+
+---
+
+### Task 16.8 — Return All Semantic Chunks for Top Results (No Cross-Chunk Loss)
+**Status:** `pending`
+**File:** `src/cortex/index/semantic.py`
+**Depends on:** Task 16.1
+
+**Description:** `SemanticIndex.search()` deduplicates by `note_id` at `semantic.py:151–170`, keeping only the highest-scoring chunk per note. For long notes chunked into multiple segments, this means only one chunk's text is returned as the snippet — the rest are discarded even if they contain relevant information. When the answer spans multiple sections of the same note, the current dedup strategy loses it. Add an option to return all matching chunks for a note (up to a limit), so the pipeline can assemble a more complete picture.
+
+**Acceptance Criteria:**
+- [ ] Add an optional `multi_chunk` parameter to `SemanticIndex.search(query, limit, multi_chunk: bool = False)`
+- [ ] When `multi_chunk=False` (default), behavior is unchanged — deduplicate by note_id, keep highest-scoring chunk
+- [ ] When `multi_chunk=True`, return up to 3 chunks per note (sorted by score descending within each note), still capped by the overall `limit`
+- [ ] The `SearchResult` for each chunk uses the chunk's actual text as `snippet` (full chunk text per Task 16.1), not a merged/concatenated text
+- [ ] Each chunk result has the same `note_id` and `title` so downstream dedup in RRF still groups them correctly
+- [ ] Existing semantic search tests pass (they don't pass `multi_chunk`, so default behavior is preserved)
+- [ ] New test: `test_search_multi_chunk_returns_multiple_chunks_per_note` — index a long note (3+ chunks), search with `multi_chunk=True`, assert multiple results share the same `note_id` with different snippet content
+
+---
+
+### Task 16.9 — Integration Test: Search-Driven Q&A Without get_note
+**Status:** `pending`
+**File:** `tests/test_mcp/test_search_integration.py` (extend)
+**Depends on:** Task 16.1, 16.2, 16.3, 16.4, 16.6, 16.7
+
+**Description:** End-to-end integration test verifying that `search_vault` returns enough information for Claude to answer questions without needing follow-up `get_note` calls. This validates that the improvements from Tasks 16.1–16.7 work together: longer snippets, tags, full content for top results, and increased context budget.
+
+**Acceptance Criteria:**
+- [ ] Test creates a vault with 5+ notes containing substantial content (500+ characters each), varied tags, and at least one source note with `source_url`
+- [ ] Test builds all indexes and runs `search_vault` with default parameters
+- [ ] Asserts: top 3 results include `"content"` field with full note body
+- [ ] Asserts: all results include `"tags"` as a list
+- [ ] Asserts: source notes include `"source_url"`
+- [ ] Asserts: snippet length for semantic results exceeds 200 characters (when the note content is long enough)
+- [ ] Asserts: the `context` field contains more than 4000 characters worth of assembled text (verifying the increased budget)
+- [ ] All existing tests still pass
+
+---
+
+*End of Task Plan — 51 atomic tasks across 16 sessions*

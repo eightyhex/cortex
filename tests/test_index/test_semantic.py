@@ -194,3 +194,25 @@ class TestSemanticIndex:
         assert len(new_results) == 1
         assert new_results[0].status == "active"
         assert new_results[0].supersedes == "sup1"
+
+    def test_semantic_snippet_returns_full_chunk_text(self, semantic_index):
+        """Semantic search snippet contains the full chunk text, not truncated to 200 chars."""
+        long_content = (
+            "Reinforcement learning is a type of machine learning where an agent "
+            "learns to make decisions by performing actions in an environment to "
+            "maximize cumulative reward. The agent receives feedback in the form of "
+            "rewards or penalties and adjusts its strategy accordingly. Key concepts "
+            "include the policy, value function, and the exploration-exploitation "
+            "tradeoff. Deep reinforcement learning combines neural networks with "
+            "reinforcement learning, enabling agents to handle complex state spaces."
+        )
+        assert len(long_content) > 200  # precondition
+        note = _make_note("long1", "Reinforcement Learning", long_content)
+        semantic_index.index_note(note)
+
+        results = semantic_index.search("reinforcement learning agent reward")
+        assert len(results) >= 1
+        r = results[0]
+        assert r.note_id == "long1"
+        assert len(r.snippet) > 200
+        assert r.snippet == long_content
