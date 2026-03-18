@@ -334,6 +334,8 @@ Users should go from `git clone` to `docker compose up` to working system. No Py
 
 Cortex runs as a single background server process using FastMCP's `streamable-http` transport. This allows multiple clients (Claude Code, Claude Desktop, future web UIs) to connect to the same server simultaneously, avoiding DuckDB lock conflicts from multiple stdio processes. The server auto-starts on login via a macOS LaunchAgent and restarts if it crashes.
 
+**Claude Code** connects directly via HTTP. **Claude Desktop** doesn't support HTTP transport natively, so `cortex install` configures it to use [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a lightweight stdio-to-HTTP bridge. This means Claude Desktop requires Node.js (`npx`) to be available on the system. Both clients share the same single server process — no duplicate instances.
+
 ---
 
 ## 🧪 Development

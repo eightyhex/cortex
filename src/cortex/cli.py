@@ -210,11 +210,17 @@ def _configure_claude_desktop(url: str) -> None:
             config = json.load(f)
 
     servers = config.setdefault("mcpServers", {})
-    servers["cortex"] = {"url": url}
+    # Claude Desktop doesn't support HTTP transport natively.
+    # Use mcp-remote as a stdio-to-HTTP bridge so both Claude Code and
+    # Claude Desktop share the same background server process.
+    servers["cortex"] = {
+        "command": "npx",
+        "args": ["mcp-remote@latest", url, "--allow-http"],
+    }
 
     with open(CLAUDE_DESKTOP_CONFIG, "w") as f:
         json.dump(config, f, indent=2)
-    print(f"  Claude Desktop: configured cortex -> {url}")
+    print(f"  Claude Desktop: configured cortex via mcp-remote -> {url}")
 
 
 def cmd_uninstall(args: argparse.Namespace) -> None:
@@ -257,6 +263,13 @@ def cmd_restart(args: argparse.Namespace) -> None:
 
     _launchctl("kickstart", "-k", f"gui/{_uid()}/{LAUNCHAGENT_LABEL}")
     print("Cortex server restarting.")
+
+
+def cmd_profile(args: argparse.Namespace) -> None:
+    """Profile context token usage of the MCP server on initial load."""
+    from cortex.profile import print_profile
+
+    print_profile()
 
 
 def cmd_status(args: argparse.Namespace) -> None:
@@ -311,6 +324,10 @@ def cli() -> None:
     # status
     p_status = sub.add_parser("status", help="Check server status")
     p_status.set_defaults(func=cmd_status)
+
+    # profile
+    p_profile = sub.add_parser("profile", help="Profile MCP context token usage")
+    p_profile.set_defaults(func=cmd_profile)
 
     args = parser.parse_args()
     if not args.command:
