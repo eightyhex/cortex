@@ -1,7 +1,7 @@
 """Tests for QueryPipeline — end-to-end hybrid search."""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -323,3 +323,58 @@ class TestQueryPipeline:
         large_result = asyncio.run(large_pipeline.execute("content block"))
 
         assert len(small_result.context) < len(large_result.context)
+
+    def test_date_range_filter_lexical(self, tmp_indexes):
+        """Pipeline passes date_range filter to lexical search, narrowing results."""
+        lexical, semantic = tmp_indexes
+
+        old_note = Note(
+            id="old-1",
+            title="Old Machine Learning",
+            note_type="concept",
+            path=Path("20-concepts/old-1.md"),
+            content="Machine learning concepts from the past.",
+            frontmatter={},
+            created=datetime(2026, 1, 10, tzinfo=timezone.utc),
+            modified=datetime(2026, 1, 10, tzinfo=timezone.utc),
+            tags=[],
+            links=[],
+            status="active",
+        )
+        new_note = Note(
+            id="new-1",
+            title="New Machine Learning",
+            note_type="concept",
+            path=Path("20-concepts/new-1.md"),
+            content="Machine learning concepts from this week.",
+            frontmatter={},
+            created=datetime(2026, 3, 20, tzinfo=timezone.utc),
+            modified=datetime(2026, 3, 20, tzinfo=timezone.utc),
+            tags=[],
+            links=[],
+            status="active",
+        )
+
+        for note in [old_note, new_note]:
+            lexical.index_note(note)
+            semantic.index_note(note)
+
+        pipeline = QueryPipeline(lexical, semantic)
+
+        # Without filter: both notes appear
+        result_all = asyncio.run(pipeline.execute("machine learning", limit=10))
+        all_ids = [r.note_id for r in result_all.results]
+        assert "old-1" in all_ids
+        assert "new-1" in all_ids
+
+        # With date filter: only the new note survives lexical search
+        filters = {
+            "date_range": (
+                datetime(2026, 3, 1, tzinfo=timezone.utc),
+                datetime(2026, 3, 31, 23, 59, 59, tzinfo=timezone.utc),
+            )
+        }
+        result_filtered = asyncio.run(pipeline.execute("machine learning", limit=10, filters=filters))
+        filtered_ids = [r.note_id for r in result_filtered.results]
+        assert "new-1" in filtered_ids
+        # old-1 may still appear via semantic (no date filter there), but new-1 must be present

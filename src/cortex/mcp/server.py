@@ -267,11 +267,22 @@ def search_vault(
     query: str,
     limit: int = 10,
     note_type: str | None = None,
+    created_after: str | None = None,
+    created_before: str | None = None,
     include_content: int = 3,
 ) -> dict:
     """Search the vault using hybrid retrieval (lexical + semantic).
 
-    Returns structured context with ranked results. Optionally filter by note_type.
+    Returns structured context with ranked results. Optionally filter by note_type
+    and/or date range.
+
+    Args:
+        query: Search query string.
+        limit: Maximum number of results to return.
+        note_type: Filter results to a specific note type (e.g. "source", "concept").
+        created_after: ISO date string (e.g. "2026-03-20"). Only include notes created on or after this date.
+        created_before: ISO date string (e.g. "2026-03-22"). Only include notes created on or before this date.
+        include_content: Include full content for the top N results.
     """
     try:
         idx = _get_index()
@@ -305,7 +316,27 @@ def search_vault(
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    result = loop.run_until_complete(pipeline.execute(query, limit))
+    # Parse date filters
+    from datetime import date as date_type
+
+    date_after = None
+    date_before = None
+    if created_after:
+        date_after = datetime.fromisoformat(created_after).date() if "T" in created_after else date_type.fromisoformat(created_after)
+    if created_before:
+        date_before = datetime.fromisoformat(created_before).date() if "T" in created_before else date_type.fromisoformat(created_before)
+
+    # Build filters for the pipeline
+    filters: dict = {}
+    if date_after and date_before:
+        filters["date_range"] = (
+            datetime(date_after.year, date_after.month, date_after.day, tzinfo=timezone.utc),
+            datetime(date_before.year, date_before.month, date_before.day, 23, 59, 59, tzinfo=timezone.utc),
+        )
+
+    # Fetch more candidates when filtering to ensure enough results survive
+    fetch_limit = limit * 5 if (note_type or date_after or date_before) else limit
+    result = loop.run_until_complete(pipeline.execute(query, fetch_limit, filters=filters))
 
     results = result.results
     if note_type:
@@ -336,6 +367,23 @@ def search_vault(
             except (KeyError, FileNotFoundError):
                 pass
         enriched.append(entry)
+
+    # Apply date filters on enriched results (covers semantic results not filtered by lexical)
+    if date_after or date_before:
+        def _in_date_range(entry: dict) -> bool:
+            created_str = entry.get("created")
+            if not created_str:
+                return False
+            created_date = datetime.fromisoformat(created_str).date()
+            if date_after and created_date < date_after:
+                return False
+            if date_before and created_date > date_before:
+                return False
+            return True
+        enriched = [e for e in enriched if _in_date_range(e)]
+
+    # Respect the requested limit after filtering
+    enriched = enriched[:limit]
 
     return {
         "query": result.query,

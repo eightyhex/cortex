@@ -165,7 +165,7 @@ These are the raw MCP tools that Claude calls under the hood:
 | `approve_draft` | Approve a pending draft |
 | `update_draft` | Edit a draft before approving |
 | `reject_draft` | Discard a draft |
-| `search_vault` | Hybrid search (lexical + semantic + graph) |
+| `search_vault` | Hybrid search (lexical + semantic + graph) with optional date filtering (`created_after`, `created_before`) |
 | `get_note` | Retrieve full note content by ID |
 | `rebuild_index` | Rebuild all search indexes |
 | `vault_stats` | Note counts, index sizes, last rebuild |

@@ -391,6 +391,75 @@ def rich_setup(tmp_path: Path):
     return {"config": config, "vault": vault, "notes": notes}
 
 
+class TestDateFiltering:
+    """Tests for created_after / created_before date filtering on search_vault."""
+
+    def test_created_after_filters_old_notes(self, full_setup):
+        """created_after excludes notes created before the given date."""
+        result = search_vault("machine learning", created_after="2026-03-10", limit=20)
+
+        for entry in result["results"]:
+            created = datetime.fromisoformat(entry["created"]).date()
+            assert created >= datetime(2026, 3, 10).date(), (
+                f"Note '{entry['title']}' created {created} should be >= 2026-03-10"
+            )
+
+    def test_created_before_filters_new_notes(self, full_setup):
+        """created_before excludes notes created after the given date."""
+        result = search_vault("machine learning", created_before="2026-03-09", limit=20)
+
+        for entry in result["results"]:
+            created = datetime.fromisoformat(entry["created"]).date()
+            assert created <= datetime(2026, 3, 9).date(), (
+                f"Note '{entry['title']}' created {created} should be <= 2026-03-09"
+            )
+
+    def test_date_range_narrows_results(self, full_setup):
+        """Using both created_after and created_before returns only notes in the range."""
+        result = search_vault(
+            "machine learning",
+            created_after="2026-03-10",
+            created_before="2026-03-11",
+            limit=20,
+        )
+
+        for entry in result["results"]:
+            created = datetime.fromisoformat(entry["created"]).date()
+            assert datetime(2026, 3, 10).date() <= created <= datetime(2026, 3, 11).date(), (
+                f"Note '{entry['title']}' created {created} should be between 2026-03-10 and 2026-03-11"
+            )
+
+        # We know perm-001 (Mar 10) and conc-002 (Mar 11) are in range
+        ids = [e["note_id"] for e in result["results"]]
+        assert "perm-001" in ids or "conc-002" in ids, "At least one note in range should appear"
+
+    def test_date_filter_excludes_all_returns_empty(self, full_setup):
+        """Date range that matches no notes returns empty results."""
+        result = search_vault(
+            "machine learning",
+            created_after="2099-01-01",
+            limit=20,
+        )
+        assert result["total"] == 0
+
+    def test_created_after_only_no_created_before(self, full_setup):
+        """created_after works without created_before."""
+        # All notes in full_setup are from 2025-01 to 2026-03
+        result = search_vault("machine learning", created_after="2026-03-13", limit=20)
+
+        for entry in result["results"]:
+            created = datetime.fromisoformat(entry["created"]).date()
+            assert created >= datetime(2026, 3, 13).date()
+
+    def test_created_before_only_no_created_after(self, full_setup):
+        """created_before works without created_after."""
+        result = search_vault("machine learning", created_before="2025-02-01", limit=20)
+
+        for entry in result["results"]:
+            created = datetime.fromisoformat(entry["created"]).date()
+            assert created <= datetime(2025, 2, 1).date()
+
+
 class TestSearchDrivenQA:
     """Verify search_vault returns enough info for Q&A without get_note calls."""
 

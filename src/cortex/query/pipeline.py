@@ -65,12 +65,13 @@ class QueryPipeline:
             reranker_config or RerankerConfig(), lexical, semantic=semantic
         )
 
-    async def execute(self, query: str, limit: int = 10) -> QueryResult:
+    async def execute(self, query: str, limit: int = 10, filters: dict | None = None) -> QueryResult:
         """Run lexical and semantic search in parallel, fuse, and assemble context.
 
         Args:
             query: The search query string.
             limit: Maximum number of results to return.
+            filters: Optional filters dict (e.g. date_range) passed to lexical search.
 
         Returns:
             QueryResult with fused results, formatted context, and explanation.
@@ -78,7 +79,7 @@ class QueryPipeline:
         # Run searches in parallel
         loop = asyncio.get_event_loop()
         lexical_task = loop.run_in_executor(
-            None, self._safe_lexical_search, query, limit
+            None, self._safe_lexical_search, query, limit, filters
         )
         semantic_task = loop.run_in_executor(
             None, self._safe_semantic_search, query, limit
@@ -159,10 +160,10 @@ class QueryPipeline:
             explanation=explanation,
         )
 
-    def _safe_lexical_search(self, query: str, limit: int) -> list[SearchResult]:
+    def _safe_lexical_search(self, query: str, limit: int, filters: dict | None = None) -> list[SearchResult]:
         """Lexical search with graceful error handling."""
         try:
-            return self._lexical.search(query, limit)
+            return self._lexical.search(query, limit, filters=filters)
         except Exception:
             return []
 

@@ -729,7 +729,11 @@ tools = [
     Tool("detect_stale", "Find notes that may be outdated and need review", {days_threshold: int}),
 
     # Query tools
-    Tool("search_vault", "Search the knowledge base with natural language", {...}),
+    Tool("search_vault", "Search the knowledge base with natural language", {
+        query: str, limit: int = 10, note_type: str | None = None,
+        created_after: str | None = None, created_before: str | None = None,
+        include_content: int = 3,
+    }),
     Tool("explore_connections", "Find connections between notes or concepts", {...}),
     Tool("get_note", "Retrieve a specific note by ID or title", {...}),
 
@@ -855,6 +859,12 @@ User says "What do I know about vector databases?"
                 → annotate any superseded results with warning
         → returns {context, results, explanation}
     → Claude synthesizes an answer using the structured context
+
+User says "What notes did I add last Friday?"
+    → Claude calls MCP tool: search_vault(query="*", created_after="2026-03-20", created_before="2026-03-20")
+        → date_range filter pushed to LexicalIndex for efficient DuckDB filtering
+        → semantic results post-filtered by created date
+        → returns only notes created on that day
 ```
 
 ---
