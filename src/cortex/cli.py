@@ -19,12 +19,14 @@ import logging
 import shutil
 import subprocess
 import sys
+import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 DEFAULT_PORT = 8757
 LOG_MAX_BYTES = 5 * 1024 * 1024  # 5 MB per file
 LOG_BACKUP_COUNT = 3  # keep 3 rotated files (20 MB total max)
+LAUNCHD_LOG_MAX_AGE_DAYS = 7
 LAUNCHAGENT_LABEL = "com.cortex.mcp-server"
 LAUNCHAGENT_PATH = Path.home() / "Library/LaunchAgents" / f"{LAUNCHAGENT_LABEL}.plist"
 CLAUDE_DESKTOP_CONFIG = Path.home() / "Library/Application Support/Claude/claude_desktop_config.json"
@@ -64,16 +66,17 @@ def _build_plist(port: int) -> dict:
             sys.exit(1)
         prog_args = [cortex_bin, "serve", "--port", str(port)]
 
-    # Logs are handled by RotatingFileHandler in cmd_serve, but launchctl
-    # needs somewhere to send stdout/stderr or the process may fail to start.
-    # Point to /dev/null — all real logging goes through the rotating handler.
+    # Real logging goes through RotatingFileHandler (server.log), but route
+    # launchd stdout/stderr to files so crashes and uncaught exceptions
+    # aren't lost.  These are cleaned up on each server start.
+    log_dir = Path.home() / ".local/share/cortex"
     return {
         "Label": LAUNCHAGENT_LABEL,
         "ProgramArguments": prog_args,
         "RunAtLoad": True,
         "KeepAlive": True,
-        "StandardOutPath": "/dev/null",
-        "StandardErrorPath": "/dev/null",
+        "StandardOutPath": str(log_dir / "launchd-stdout.log"),
+        "StandardErrorPath": str(log_dir / "launchd-stderr.log"),
     }
 
 
@@ -91,6 +94,16 @@ def _uid() -> str:
 
 
 # ── Commands ──────────────────────────────────────────────────────────────
+
+
+def _clean_launchd_logs() -> None:
+    """Truncate launchd stdout/stderr logs if older than LAUNCHD_LOG_MAX_AGE_DAYS."""
+    log_dir = Path.home() / ".local/share/cortex"
+    cutoff = time.time() - (LAUNCHD_LOG_MAX_AGE_DAYS * 86400)
+    for name in ("launchd-stdout.log", "launchd-stderr.log"):
+        log_file = log_dir / name
+        if log_file.exists() and log_file.stat().st_mtime < cutoff:
+            log_file.write_text("")
 
 
 def _setup_log_rotation() -> None:
@@ -123,6 +136,7 @@ def cmd_serve(args: argparse.Namespace) -> None:
     from cortex.mcp.server import init_server
 
     _setup_log_rotation()
+    _clean_launchd_logs()
 
     config = CortexConfig()
     index = IndexManager(config)

@@ -59,6 +59,7 @@ This creates a macOS LaunchAgent that:
 - Starts the Cortex server automatically on login
 - Restarts it if it crashes
 - Runs a **single server process** shared by Claude Code and Claude Desktop
+- Logs to `~/.local/share/cortex/` (see [Logs](#logs) below)
 
 ### 4. Restart Claude Apps & Build Index
 
@@ -92,16 +93,100 @@ git pull
 cortex restart    # or: uv run cortex restart
 ```
 
-### Enabling / Disabling Cortex
+### Uninstalling Cortex
 
-Cortex adds MCP tool definitions to your context window. To toggle it on and off without removing the config:
+To fully remove Cortex from your system:
 
 ```bash
-claude mcp disable cortex   # turn off (saves context)
+# If installed as a tool:
+cortex uninstall
+
+# If running from the repo:
+uv run cortex uninstall
+```
+
+This stops the background server, removes the LaunchAgent, and removes the MCP config from both Claude Code and Claude Desktop.
+
+To also clean up logs and cached data:
+
+```bash
+rm -rf ~/.local/share/cortex    # logs and derived indexes
+```
+
+**Clean reinstall:** If something is broken and you want to start fresh:
+
+```bash
+# Remove everything
+cortex uninstall
+rm -rf ~/.local/share/cortex
+
+# Reinstall
+cortex install          # or: uv run cortex install
+
+# Restart Claude apps, then rebuild the index:
+# > "rebuild my cortex index"
+```
+
+### Enabling / Disabling Cortex
+
+To temporarily toggle Cortex without uninstalling (saves context tokens when you don't need it):
+
+```bash
+claude mcp disable cortex   # turn off
 claude mcp enable cortex    # turn back on
 ```
 
 Restart Claude Code after toggling.
+
+### Logs
+
+Cortex writes logs to `~/.local/share/cortex/`:
+
+| File | What it contains | Rotation |
+|------|-----------------|----------|
+| `server.log` | Application logs (requests, errors, index ops) | Size-based: 5 MB per file, 3 backups (20 MB max) |
+| `launchd-stdout.log` | Server stdout (startup messages) | Truncated weekly on server restart |
+| `launchd-stderr.log` | Server stderr (uncaught exceptions, crashes) | Truncated weekly on server restart |
+
+To tail logs while debugging:
+
+```bash
+tail -f ~/.local/share/cortex/server.log
+tail -f ~/.local/share/cortex/launchd-stderr.log
+```
+
+### How the LaunchAgent Works
+
+`cortex install` creates a macOS LaunchAgent plist at `~/Library/LaunchAgents/com.cortex.mcp-server.plist`. This is a standard macOS mechanism for running background services.
+
+**What it configures:**
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `RunAtLoad` | `true` | Start the server when you log in |
+| `KeepAlive` | `true` | Restart automatically if the server crashes |
+| `StandardOutPath` | `~/.local/share/cortex/launchd-stdout.log` | Capture stdout |
+| `StandardErrorPath` | `~/.local/share/cortex/launchd-stderr.log` | Capture stderr/crashes |
+
+**Useful launchctl commands** (you shouldn't need these normally — use `cortex status/restart/uninstall` instead):
+
+```bash
+# Check if the agent is loaded
+launchctl list | grep cortex
+
+# View the full agent info (PID, exit status, etc.)
+launchctl list com.cortex.mcp-server
+
+# Manually unload/reload (cortex restart does this for you)
+launchctl bootout gui/$(id -u)/com.cortex.mcp-server
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cortex.mcp-server.plist
+```
+
+**Troubleshooting:**
+
+- **Server won't start?** Check `~/.local/share/cortex/launchd-stderr.log` for errors.
+- **Port conflict?** The default port is 8757. Use `cortex install --port <N>` to change it.
+- **Wrong Python/uv?** In dev mode, the plist uses the full path to `uv`. If you move or reinstall `uv`, run `cortex install` again to update the path.
 
 ## 📖 Usage Guide
 
