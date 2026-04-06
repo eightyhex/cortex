@@ -10,19 +10,34 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _expand_path(v: Path) -> Path:
+    """Expand ~ and make path absolute."""
+    return Path(v).expanduser()
 
 
 class VaultConfig(BaseModel):
     path: Path = Path("./vault")
     templates_folder: str = "_templates"
 
+    @field_validator("path")
+    @classmethod
+    def expand_path(cls, v: Path) -> Path:
+        return _expand_path(v)
+
 
 class IndexConfig(BaseModel):
     db_path: Path = Path("./data/cortex.duckdb")
     embeddings_path: Path = Path("./data/embeddings")
     graph_path: Path = Path("./data/graph")
+
+    @field_validator("db_path", "embeddings_path", "graph_path")
+    @classmethod
+    def expand_path(cls, v: Path) -> Path:
+        return _expand_path(v)
 
 
 class EmbeddingsConfig(BaseModel):
@@ -53,6 +68,11 @@ class DraftConfig(BaseModel):
     drafts_dir: Path = Path("./data/drafts")
     stale_draft_hours: int = 24
 
+    @field_validator("drafts_dir")
+    @classmethod
+    def expand_path(cls, v: Path) -> Path:
+        return _expand_path(v)
+
 
 class RerankerConfig(BaseModel):
     recency_weight: float = 0.15
@@ -68,13 +88,21 @@ class McpConfig(BaseModel):
 
 
 def _load_yaml_settings() -> dict[str, Any]:
-    """Load settings from settings.yaml, falling back to settings.example.yaml."""
-    for filename in ("settings.yaml", "settings.example.yaml"):
-        path = Path(filename)
-        if path.exists():
-            with open(path) as f:
-                data = yaml.safe_load(f)
-            return data if data else {}
+    """Load settings from settings.yaml, falling back to settings.example.yaml.
+
+    Searches the current working directory first, then ~/.config/cortex/.
+    """
+    search_dirs = [
+        Path.cwd(),
+        Path.home() / ".config" / "cortex",
+    ]
+    for directory in search_dirs:
+        for filename in ("settings.yaml", "settings.example.yaml"):
+            path = directory / filename
+            if path.exists():
+                with open(path) as f:
+                    data = yaml.safe_load(f)
+                return data if data else {}
     return {}
 
 
